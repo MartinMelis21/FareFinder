@@ -160,7 +160,7 @@ public class FareScraper {
 	     			int price = Integer.parseInt(eElement.getElementsByTagName("MinPrice").item(0).getTextContent());
 	     			double dealRatio = price/(double)getDistance(iataCodeString);
 	     			
-	     			if (dealRatio>=0.025)
+	     			if (dealRatio>=0.05)
 	     				continue;
 	     			
 	     			finalResponse.append(("Outbound Leg\n\tFrom : " + originOutbound + " to " + destinationOutbound) + "\n");
@@ -184,7 +184,7 @@ public class FareScraper {
 	      } catch (Exception e) {
 	         e.printStackTrace();
 	      }
-return response.toString();
+return finalResponse.toString();
 	}
 	
 	

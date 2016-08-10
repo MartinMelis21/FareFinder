@@ -36,8 +36,9 @@ public class FareFinder extends HttpServlet{
 	    response.setContentType("text/plain");
 	    PrintWriter out = response.getWriter();
 	    fareScraper = new FareScraper();
+	    String fares = "";
 	    try {
-			fareScraper.getFares();
+			fares = fareScraper.getFares();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -45,7 +46,7 @@ public class FareFinder extends HttpServlet{
 	    if (session.isNew()) {
 	      count++;
 	    }
-	    out.println("This site has been accessed " + count + " times.");
+	    out.println(fares);
 	  }
 	  
 	  @Override

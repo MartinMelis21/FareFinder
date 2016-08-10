@@ -65,8 +65,10 @@ public class FareScraper {
 	return distance;
 	}
 	
-	public void getFares() throws Exception {
+	public String getFares() throws Exception {
 
+		StringBuffer finalResponse = new StringBuffer();
+		
 		String skyScannerUrl = "http://partners.api.skyscanner.net/apiservices/browsequotes/v1.0/SK/EUR/en-US/AT/anywhere/anytime/anytime?apiKey=prtl6749387986743898559646983194";
 		
 		URL skyScannerObj = new URL(skyScannerUrl);
@@ -81,8 +83,6 @@ public class FareScraper {
 		skyScannerCon.setRequestProperty("Accept", "application/xml");
 		
 		int responseCode = skyScannerCon.getResponseCode();
-		System.out.println("\nSending 'GET' request to URL : " + skyScannerUrl);
-		System.out.println("Response Code : " + responseCode);
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(skyScannerCon.getInputStream()));
 		String inputLine;
@@ -142,11 +142,7 @@ public class FareScraper {
 	         
 	         //second I collect quotes
 	         
-	        System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
 				
-	     	nList = doc.getElementsByTagName("QuoteDto");
-	     			
-	     	System.out.println("----------------------------");
 
 	     	for (int temp = 0; temp < nList.getLength(); temp++) {
 
@@ -167,6 +163,12 @@ public class FareScraper {
 	     			if (dealRatio>=0.025)
 	     				continue;
 	     			
+	     			finalResponse.append(("Outbound Leg\n\tFrom : " + originOutbound + " to " + destinationOutbound) + "\n");
+	     			finalResponse.append(("\tDate : " + ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
+	     			finalResponse.append(("Inbound Leg\n\tFrom : " + originInbound + " to " + destinationInbound) + "\n");
+	     			finalResponse.append(("\tDate : " + ((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
+	     			finalResponse.append(("Price : " + price) + "\n");
+	     			finalResponse.append(("DealRatio : " + dealRatio) + "\n");
 	     			
 	     			System.out.println("Outbound Leg\n\tFrom : " + originOutbound + " to " + destinationOutbound);
 	     			System.out.println("\tDate : " + ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent());
@@ -182,7 +184,7 @@ public class FareScraper {
 	      } catch (Exception e) {
 	         e.printStackTrace();
 	      }
-
+return response.toString();
 	}
 	
 	

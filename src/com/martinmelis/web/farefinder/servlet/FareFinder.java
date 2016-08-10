@@ -30,7 +30,6 @@ public class FareFinder extends HttpServlet{
 	  protected void doGet(HttpServletRequest request,
 	      HttpServletResponse response) throws ServletException, IOException {
 	    // Set a cookie for the user, so that the counter does not increate
-	    // every time the user press refresh
 	    HttpSession session = request.getSession(true);
 	    // Set the session valid for 5 secs
 	    session.setMaxInactiveInterval(5);

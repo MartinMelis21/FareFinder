@@ -160,15 +160,15 @@ public class FareScraper {
 	     			int price = Integer.parseInt(eElement.getElementsByTagName("MinPrice").item(0).getTextContent());
 	     			double dealRatio = price/(double)getDistance(iataCodeString);
 	     			
-	     			if (dealRatio>=0.05)
-	     				continue;
+	     			//if (dealRatio>=0.05)
+	     			//	continue;
 	     			
 	     			finalResponse.append(("Outbound Leg\n\tFrom : " + originOutbound + " to " + destinationOutbound) + "\n");
 	     			finalResponse.append(("\tDate : " + ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
 	     			finalResponse.append(("Inbound Leg\n\tFrom : " + originInbound + " to " + destinationInbound) + "\n");
 	     			finalResponse.append(("\tDate : " + ((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
 	     			finalResponse.append(("Price : " + price) + "\n");
-	     			finalResponse.append(("DealRatio : " + dealRatio) + "\n");
+	     			finalResponse.append(("DealRatio : " + dealRatio) + "\n"+ "\n");
 	     			
 	     			System.out.println("Outbound Leg\n\tFrom : " + originOutbound + " to " + destinationOutbound);
 	     			System.out.println("\tDate : " + ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent());

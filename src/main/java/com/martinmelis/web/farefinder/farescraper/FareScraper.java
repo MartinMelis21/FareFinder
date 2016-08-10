@@ -67,7 +67,7 @@ public class FareScraper {
 	
 	public String getFares() throws Exception {
 
-		StringBuffer finalResponse = new StringBuffer();
+		StringBuffer finalResponse = new StringBuffer("TEST\n");
 		
 		String skyScannerUrl = "http://partners.api.skyscanner.net/apiservices/browsequotes/v1.0/SK/EUR/en-US/AT/anywhere/anytime/anytime?apiKey=prtl6749387986743898559646983194";
 		

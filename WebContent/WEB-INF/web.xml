@@ -9,4 +9,15 @@
     <welcome-file>default.htm</welcome-file>
     <welcome-file>default.jsp</welcome-file>
   </welcome-file-list>
+  
+    <servlet>
+    <servlet-name>FareFinder</servlet-name>
+    <servlet-class>com.martinmelis.web.farefinder.servlet</servlet-class>    
+  	</servlet>  
+  	
+  <servlet-mapping>
+    <servlet-name>FareFinder</servlet-name>
+    <url-pattern>/farefinder</url-pattern>
+  </servlet-mapping> 
+  
 </web-app>

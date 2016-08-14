@@ -1,33 +1,51 @@
 package com.martinmelis.web.farefinder.farescraper;
 
 import java.net.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.io.*;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathExpressionException;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.w3c.dom.Node;
-import org.w3c.dom.Element;
-import javax.xml.parsers.*;
-import javax.xml.xpath.*;
+
+import java.io.*;
+
+
 
 public class FareScraper {
+	
+	//-----global variables-----
 	
 	BufferedReader in;
 	private final String USER_AGENT = "Mozilla/5.0";
 	private HashMap <Integer,String> locationDictionary;
+	StringBuffer finalResponse;
+	
+	//-----inicialization-----
 	
 	public FareScraper() throws IOException {
-		locationDictionary = new HashMap<Integer,String>();
-			
+		locationDictionary = new HashMap<Integer,String>();	
+		finalResponse = new StringBuffer("Fares:\n");
 	}	
+	
+	//-----Distance calculation-----
+	//TODO needs to be changed for MySql connector and dynamic calculation
 	
 	public int getDistance (String iataCodeString) throws IOException, ParserConfigurationException, SAXException, XPathExpressionException
 	{
+		//TODO needs to be attached to Database
+		
+		
 		String distanceUrl = "http://www.gcmap.com/dist?P=" + iataCodeString + "&DU=km&DM=&SG=&SU=mph";
 		
 		URL distanceObj = new URL(distanceUrl);
@@ -65,25 +83,21 @@ public class FareScraper {
 	return distance;
 	}
 	
-	public String getFares() throws Exception {
-
-		StringBuffer finalResponse = new StringBuffer("TEST\n");
+	//-----Fetching the Fares Data and Quote Metadata-----
+	
+	public String fetchFares(String origin) throws Exception {
 		
-		String skyScannerUrl = "http://partners.api.skyscanner.net/apiservices/browsequotes/v1.0/SK/EUR/en-US/AT/anywhere/anytime/anytime?apiKey=prtl6749387986743898559646983194";
-		
+		//-------Skyscanner API URL------
+		String skyScannerUrl = "http://partners.api.skyscanner.net/apiservices/browsequotes/v1.0/SK/EUR/en-US/"+origin+"/anywhere/anytime/anytime?apiKey=prtl6749387986743898559646983194";
 		URL skyScannerObj = new URL(skyScannerUrl);
 		HttpURLConnection skyScannerCon = (HttpURLConnection) skyScannerObj.openConnection();
-
-		// optional default is GET
 		skyScannerCon.setRequestMethod("GET");
-
-		//add request header
 		skyScannerCon.setRequestProperty("User-Agent", USER_AGENT);
 		skyScannerCon.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 		skyScannerCon.setRequestProperty("Accept", "application/xml");
 		
-		int responseCode = skyScannerCon.getResponseCode();
-
+		
+		//reading the response
 		BufferedReader in = new BufferedReader(new InputStreamReader(skyScannerCon.getInputStream()));
 		String inputLine;
 		StringBuffer response = new StringBuffer();
@@ -92,27 +106,34 @@ public class FareScraper {
 			response.append(inputLine);
 		}
 		in.close();
+		
+		return response.toString();
+	}
 
+	public String getFares(ArrayList <String> countryList) throws Exception {
 		
+		String fetchedFares;
 		
-// printing the response to stdout		
-		
+		for (String origin: countryList)
+		{
+			fetchedFares = fetchFares(origin);
+			
 		
 		 try {	
 	         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 	         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-	         Document doc = dBuilder.parse(new InputSource(new StringReader(response.toString())));
+	         Document doc = dBuilder.parse(new InputSource(new StringReader(fetchedFares)));
 	         doc.getDocumentElement().normalize();
 	        
 	         
 	         //first I create HashMap dictionary for locations
 	         
-	         NodeList nList = doc.getElementsByTagName("PlaceDto");
-	         
+	         NodeList locationList = doc.getElementsByTagName("PlaceDto");
+	         NodeList quoteList = doc.getElementsByTagName("QuoteDto");
 
-		     	for (int temp = 0; temp < nList.getLength(); temp++) {
+		     	for (int temp = 0; temp < locationList.getLength(); temp++) {
 
-		     		Node nNode = nList.item(temp);
+		     		Node nNode = locationList.item(temp);
 		     				
 		     		if (nNode.getNodeType() == Node.ELEMENT_NODE) {
 
@@ -122,6 +143,8 @@ public class FareScraper {
 		     			String iataCode = "";
 		     			String name = "";
 		     			String countryName = "";
+		     			
+		     			//System.out.println(eElement.getElementsByTagName("CountryName").item(0));
 		     			
 		     			if ((node = eElement.getElementsByTagName("PlaceId").item(0))!=null)
 		     				placeID = Integer.parseInt(node.getTextContent());
@@ -133,7 +156,11 @@ public class FareScraper {
 		     				countryName = node.getTextContent();
 		     			
 		     			if (placeID != null)
+		     			{
 		     				locationDictionary.put(placeID, name+"|"+countryName+"|"+iataCode);
+		     			}
+		     			
+		     			//TODO add to MySQL Database
 		     		}
 		     	}
 	         
@@ -144,14 +171,14 @@ public class FareScraper {
 	         
 				
 
-	     	for (int temp = 0; temp < nList.getLength(); temp++) {
+	     	for (int temp = 0; temp < quoteList.getLength(); temp++) {
 
-	     		Node nNode = nList.item(temp);
+	     		Node nNode = quoteList.item(temp);
 	     				
 	     		if (nNode.getNodeType() == Node.ELEMENT_NODE) {
 
 	     			Element eElement = (Element) nNode;
-	     				     			
+	     			  			
 	     			String originOutbound = locationDictionary.get(Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("OriginId").item(0).getTextContent()));
 	     			String destinationOutbound = locationDictionary.get(Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DestinationId").item(0).getTextContent()));;
 	     			String originInbound = locationDictionary.get(Integer.parseInt(((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("OriginId").item(0).getTextContent()));;
@@ -160,8 +187,8 @@ public class FareScraper {
 	     			int price = Integer.parseInt(eElement.getElementsByTagName("MinPrice").item(0).getTextContent());
 	     			double dealRatio = price/(double)getDistance(iataCodeString);
 	     			
-	     			//if (dealRatio>=0.05)
-	     			//	continue;
+	     			if (dealRatio>=0.02)
+	     				continue;
 	     			
 	     			finalResponse.append(("Outbound Leg\n\tFrom : " + originOutbound + " to " + destinationOutbound) + "\n");
 	     			finalResponse.append(("\tDate : " + ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
@@ -184,6 +211,7 @@ public class FareScraper {
 	      } catch (Exception e) {
 	         e.printStackTrace();
 	      }
+		}
 return finalResponse.toString();
 	}
 	

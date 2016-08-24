@@ -1,6 +1,12 @@
 package com.martinmelis.web.farefinder.farescraper;
 
 import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Matcher;
@@ -18,6 +24,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import dataTypes.AirportStructure;
+
 import java.io.*;
 
 
@@ -28,27 +36,30 @@ public class FareScraper {
 	
 	BufferedReader in;
 	private final String USER_AGENT = "Mozilla/5.0";
-	private HashMap <Integer,String> locationDictionary;
+	private HashMap <Integer,AirportStructure> locationDictionary;
 	StringBuffer finalResponse;
-	
+	final String getAirportSQL = "SELECT airportName,airportCity,airportCountry,latitude,longtitude,iataFaa,altitude,icao from Airports WHERE SkyScannerID = ?";
+	final String addAirportSQL = "INSERT INTO Airports (iataFaa, airportName, airportCity, airportCountry, latitude, longtitude, altitude, icao) values (?, ?, ?, ?, ?, ?, ?, ?)";
+	final String updateSSIDSQL = "UPDATE Airports SET SkyScannerID = ? WHERE iataFaa = ?";
+	private Connection conn = null;
 	//-----inicialization-----
 	
 	public FareScraper() throws IOException {
-		locationDictionary = new HashMap<Integer,String>();	
+		locationDictionary = new HashMap<Integer,AirportStructure>();	
 		finalResponse = new StringBuffer("Fares:\n");
 	}	
 	
 	//-----Distance calculation-----
 	//TODO needs to be changed for MySql connector and dynamic calculation
 	
-	public int getDistance (String iataCodeString) throws IOException, ParserConfigurationException, SAXException, XPathExpressionException
+	public AirportStructure accountNewAirport (String iataCode) throws IOException, ParserConfigurationException, SAXException, XPathExpressionException
 	{
 		//TODO needs to be attached to Database
 		
 		
-		String distanceUrl = "http://www.gcmap.com/dist?P=" + iataCodeString + "&DU=km&DM=&SG=&SU=mph";
+		String sourceUrl = "http://www.gcmap.com/airport/" + iataCode;
 		
-		URL distanceObj = new URL(distanceUrl);
+		URL distanceObj = new URL(sourceUrl);
 		HttpURLConnection distanceCon = (HttpURLConnection) distanceObj.openConnection();
 
 		// optional default is GET
@@ -57,35 +68,78 @@ public class FareScraper {
 		distanceCon.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 		distanceCon.setRequestProperty("Accept", "application/xml");
 
-		BufferedReader in = new BufferedReader(new InputStreamReader(distanceCon.getInputStream()));
+		BufferedReader in = new BufferedReader(new InputStreamReader(distanceCon.getInputStream(), StandardCharsets.ISO_8859_1));
 		String inputLine;
-		StringBuffer response = new StringBuffer();
+		
+		Double latitude = null;
+		Double longtitude = null;
+		Double altitude = null;
+		
+		String name = null;
+		String country = null;
+		String city = null;
+		String ICAO = null;
 
-		int distance = 1;
-		String previousLine = "";
 		while ((inputLine = in.readLine()) != null) {
-			if (previousLine.contains("Total:") && inputLine.contains("<td class=\"d\">"))
-			{
-				String pattern = "<td class=\"d\">(.*) km</td>";
+				String patternName = "<tr valign=top><td>Name:</td><td colspan=2 class=\"fn org\">(.*?)</td></tr>";
+				String patternCity = "<span class=\"locality\">(.*?)</span>";
+				String patternCountry = "<span class=\"country-name\">(.*?)</span>";
+				String patternICAO = "<tr valign=top><td nowrap>ICAO:</td><td colspan=2 nowrap><a href=\"/mapui\\?P=(.*?)\"";
+				String patternLatitude = "class=\"latitude\" title=\"(.*?)\"";
+				String patternLongtitude = "class=\"longitude\" title=\"(.*?)\"";
+				String patternAltitude = "Elevation:</td><td colspan=2 nowrap>(.*?) ft";
 			    // Create a Pattern object
-			    Pattern r = Pattern.compile(pattern);
-
-			    // Now create matcher object.
-			    Matcher m = r.matcher(inputLine);
-			      if (m.find( )) {
-			          distance = Integer.parseInt(m.group(1).replaceAll(",", ""));
-			         
-			      }
-			}
-				previousLine = inputLine;
+				Pattern r = null;
+				Matcher m = null;
+				
+			    r = Pattern.compile(patternName);
+			    m = r.matcher(inputLine);
+			    //TODO need to fix UTF
+			      if (m.find())
+			          name = m.group(1);
+			      
+			    r = Pattern.compile(patternCity);
+				m = r.matcher(inputLine);
+				  if (m.find( ))
+				      city = m.group(1);
+				      
+				r = Pattern.compile(patternCountry);
+				m = r.matcher(inputLine);
+				  if (m.find( ))
+				      country = m.group(1);
+				  
+				r = Pattern.compile(patternICAO);
+				m = r.matcher(inputLine);
+				  if (m.find())
+				      ICAO = m.group(1);
+				      
+				r = Pattern.compile(patternLatitude);
+				m = r.matcher(inputLine);
+				  if (m.find( ))
+				      latitude = Double.parseDouble(m.group(1));
+					      
+				r = Pattern.compile(patternLongtitude);
+				m = r.matcher(inputLine);
+				  if (m.find( ))
+				      longtitude = Double.parseDouble(m.group(1));
+				  
+				r = Pattern.compile(patternAltitude);
+				m = r.matcher(inputLine);
+				  if (m.find( ))
+				      altitude = Double.parseDouble(m.group(1));
 		}
 		in.close();	
-	return distance;
+	
+	if (name != null && latitude != null && longtitude != null)
+		return new AirportStructure(name, city, country, latitude, longtitude, null, iataCode, altitude, ICAO);
+	else
+		return null;
 	}
+
 	
 	//-----Fetching the Fares Data and Quote Metadata-----
 	
-	public String fetchFares(String origin) throws Exception {
+ 	public String fetchFares(String origin) throws Exception {
 		
 		//-------Skyscanner API URL------
 		String skyScannerUrl = "http://partners.api.skyscanner.net/apiservices/browsequotes/v1.0/SK/EUR/en-US/"+origin+"/anywhere/anytime/anytime?apiKey=prtl6749387986743898559646983194";
@@ -110,9 +164,10 @@ public class FareScraper {
 		return response.toString();
 	}
 
-	public String getFares(ArrayList <String> countryList) throws Exception {
+	public String getFares(ArrayList <String> countryList, Connection conn) throws Exception {
 		
 		String fetchedFares;
+		this.conn=conn;
 		
 		for (String origin: countryList)
 		{
@@ -126,51 +181,11 @@ public class FareScraper {
 	         doc.getDocumentElement().normalize();
 	        
 	         
-	         //first I create HashMap dictionary for locations
 	         
 	         NodeList locationList = doc.getElementsByTagName("PlaceDto");
 	         NodeList quoteList = doc.getElementsByTagName("QuoteDto");
 
-		     	for (int temp = 0; temp < locationList.getLength(); temp++) {
-
-		     		Node nNode = locationList.item(temp);
-		     				
-		     		if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-
-		     			Element eElement = (Element) nNode;
-		     			Node node = null;
-		     			Integer placeID = null;
-		     			String iataCode = "";
-		     			String name = "";
-		     			String countryName = "";
-		     			
-		     			//System.out.println(eElement.getElementsByTagName("CountryName").item(0));
-		     			
-		     			if ((node = eElement.getElementsByTagName("PlaceId").item(0))!=null)
-		     				placeID = Integer.parseInt(node.getTextContent());
-		     			if ((node = eElement.getElementsByTagName("IataCode").item(0))!=null)
-		     				iataCode = node.getTextContent();
-		     			if ((node = eElement.getElementsByTagName("Name").item(0))!=null)
-		     				name = node.getTextContent();
-		     			if ((node = eElement.getElementsByTagName("CountryName").item(0))!=null)
-		     				countryName = node.getTextContent();
-		     			
-		     			if (placeID != null)
-		     			{
-		     				locationDictionary.put(placeID, name+"|"+countryName+"|"+iataCode);
-		     			}
-		     			
-		     			//TODO add to MySQL Database
-		     		}
-		     	}
 	         
-	         
-	         
-	         
-	         //second I collect quotes
-	         
-				
-
 	     	for (int temp = 0; temp < quoteList.getLength(); temp++) {
 
 	     		Node nNode = quoteList.item(temp);
@@ -179,27 +194,35 @@ public class FareScraper {
 
 	     			Element eElement = (Element) nNode;
 	     			  			
-	     			String originOutbound = locationDictionary.get(Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("OriginId").item(0).getTextContent()));
-	     			String destinationOutbound = locationDictionary.get(Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DestinationId").item(0).getTextContent()));;
-	     			String originInbound = locationDictionary.get(Integer.parseInt(((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("OriginId").item(0).getTextContent()));;
-	     			String destinationInbound = locationDictionary.get(Integer.parseInt(((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("DestinationId").item(0).getTextContent()));;
-	     			String iataCodeString = originOutbound.split("\\|")[2] + "-" + destinationOutbound.split("\\|")[2]+ "-" + originInbound.split("\\|")[2]+ "-" + destinationInbound.split("\\|")[2];
+	     			//TODO I need to take values from HashList, if there is no value, I take from database
+	    	     			
+	     			AirportStructure originOutbound 		= getAirportInfoSkyScanner(Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("OriginId").item(0).getTextContent()), locationList);
+	     			AirportStructure destinationOutbound 	= getAirportInfoSkyScanner(Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DestinationId").item(0).getTextContent()), locationList);
+	     			AirportStructure originInbound 			= getAirportInfoSkyScanner(Integer.parseInt(((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("OriginId").item(0).getTextContent()), locationList);
+	     			AirportStructure destinationInbound 	= getAirportInfoSkyScanner(Integer.parseInt(((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("DestinationId").item(0).getTextContent()), locationList);
+	     			
 	     			int price = Integer.parseInt(eElement.getElementsByTagName("MinPrice").item(0).getTextContent());
-	     			double dealRatio = price/(double)getDistance(iataCodeString);
+	     			  			
+	     			double latOrigin = originOutbound.getLatitude();
+	     			double longOrigin = originOutbound.getLongtitude();
+	     			double latDestination = destinationOutbound.getLatitude();
+	     			double longDestination = destinationOutbound.getLongtitude();
+	     			
+	     			double dealRatio = price/getDistance(latOrigin,longOrigin,latDestination,longDestination);
 	     			
 	     			if (dealRatio>=0.015)
 	     				continue;
-	     			
-	     			finalResponse.append(("Outbound Leg\n\tFrom : " + originOutbound + " to " + destinationOutbound) + "\n");
+	     				     			
+	     			finalResponse.append(("Outbound Leg\n\tFrom : " + originOutbound.getCityName() + " to " + destinationOutbound.getCityName() ) + "\n");
 	     			finalResponse.append(("\tDate : " + ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
-	     			finalResponse.append(("Inbound Leg\n\tFrom : " + originInbound + " to " + destinationInbound) + "\n");
+	     			finalResponse.append(("Inbound Leg\n\tFrom : " + originInbound.getCityName()  + " to " + destinationInbound.getCityName() ) + "\n");
 	     			finalResponse.append(("\tDate : " + ((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
 	     			finalResponse.append(("Price : " + price) + "\n");
 	     			finalResponse.append(("DealRatio : " + dealRatio) + "\n"+ "\n");
 	     			
-	     			System.out.println("Outbound Leg\n\tFrom : " + originOutbound + " to " + destinationOutbound);
+	     			System.out.println("Outbound Leg\n\tFrom : " + originOutbound.getCityName()  + " to " + destinationOutbound.getCityName() );
 	     			System.out.println("\tDate : " + ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent());
-	     			System.out.println("Inbound Leg\n\tFrom : " + originInbound + " to " + destinationInbound);
+	     			System.out.println("Inbound Leg\n\tFrom : " + originInbound.getCityName()  + " to " + destinationInbound.getCityName() );
 	     			System.out.println("\tDate : " + ((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent());
 	     			System.out.println("Price : " + price);
 	     			System.out.println("DealRatio : " + dealRatio);
@@ -214,6 +237,130 @@ public class FareScraper {
 		}
 return finalResponse.toString();
 	}
+
+	public double getDistance (double originLat, double originLong, double destLat, double destLong)
+	{
+		double x1 = Math.toRadians(originLat);
+        double y1 = Math.toRadians(originLong);
+        double x2 = Math.toRadians(destLat);
+        double y2 = Math.toRadians(destLong);
+
+       /*************************************************************************
+        * Compute using law of cosines
+        *************************************************************************/
+        // great circle distance in radians
+        double angle = Math.acos(Math.sin(x1) * Math.sin(x2)
+                      + Math.cos(x1) * Math.cos(x2) * Math.cos(y1 - y2));
+
+        // convert back to degrees
+        angle = Math.toDegrees(angle);
+
+        // each degree on a great circle of Earth is 60 nautical miles
+        double distance = 60 * angle * 1.852;
+
+        return distance;
+	}
+	
+	public void insertAirport (AirportStructure airport, Connection conn) throws SQLException
+	{			
+				
+			PreparedStatement ps = conn.prepareStatement(addAirportSQL);
+			ps.setString(1, airport.getIataFaa());
+			ps.setString(2, airport.getAirportName());
+			ps.setString(3, airport.getCityName());
+			ps.setString(4, airport.getCountry());
+			ps.setDouble(5, airport.getLatitude());
+			ps.setDouble(6, airport.getLongtitude());
+			ps.setDouble(7, airport.getAltitude());
+			ps.setString(8, airport.getIcao());
+			
+			ps.executeUpdate();
+	}
 	
 	
+	public void updateSSID (NodeList locationList, int ssid, Connection conn) throws SQLException, XPathExpressionException, IOException, ParserConfigurationException, SAXException
+	{
+		for (int temp = 0; temp < locationList.getLength(); temp++) {
+
+     		Node nNode = locationList.item(temp);
+     				
+     		if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+
+     			Element eElement = (Element) nNode;
+     			Node node = null;
+     			Integer placeID = null;
+     			String iataCode = "";
+     			
+     			
+     			
+     			if ((node = eElement.getElementsByTagName("PlaceId").item(0))!=null)
+     				placeID = Integer.parseInt(node.getTextContent());
+     			if ((node = eElement.getElementsByTagName("IataCode").item(0))!=null)
+     				iataCode = node.getTextContent().toUpperCase();
+     			
+     			if (placeID.equals(ssid))
+     			{
+     				PreparedStatement ps = conn.prepareStatement(updateSSIDSQL);
+     				ps.setInt(1, ssid);
+     				ps.setString(2, iataCode.toUpperCase());
+     				if (ps.executeUpdate()==0)
+     					insertAirport(accountNewAirport(iataCode.toUpperCase()), conn);
+     				
+     			}
+     			
+     		}
+			 			
+	}
+	}
+		
+	
+		public AirportStructure getAirportInfoSkyScanner (Integer SSID, NodeList locationList) throws SQLException, XPathExpressionException, IOException, ParserConfigurationException, SAXException
+		{ 	
+			if (locationDictionary.containsKey(SSID))
+			{
+				return locationDictionary.get(SSID);
+
+			} 			
+ 			
+ 			
+ 			final PreparedStatement ps = conn.prepareStatement(getAirportSQL);
+ 			ps.setInt(1, SSID);
+ 			final ResultSet resultSet = ps.executeQuery();
+ 			
+ 			//database columns
+ 			String airportName = 	null;
+ 			String cityName = 		null;
+ 			String country = 		null;
+ 			Double latitude = 		null;
+ 			Double longtitude = 	null;
+ 			Double altitude = 		null;
+ 			String icao=			null;
+ 			String iataFaa=			null;
+ 			
+ 			if (resultSet.next()) {  		     	
+     			airportName = 	resultSet.getString(1);
+     			cityName = 		resultSet.getString(2);
+     			country = 		resultSet.getString(3);
+     			latitude = 		resultSet.getDouble(4);
+     			longtitude = 	resultSet.getDouble(5);
+     			iataFaa =		resultSet.getString(6);  
+     			altitude=		resultSet.getDouble(7); 
+     			icao=			resultSet.getString(8); 
+     			
+     			resultSet.close();
+ 			}
+ 			else
+ 			{
+ 				//in case update failed, i insert new airport entry to the table
+ 				updateSSID(locationList, SSID, conn);
+ 				resultSet.close();
+ 				AirportStructure airportStructure = getAirportInfoSkyScanner (SSID, locationList);
+ 	 			return airportStructure;
+ 			}
+ 			
+ 			AirportStructure airportStructure = new AirportStructure(airportName,cityName,country,latitude,longtitude,SSID,iataFaa, altitude, icao);
+ 			locationDictionary.put(SSID, airportStructure);
+ 			
+ 			return airportStructure;
+		}
 }

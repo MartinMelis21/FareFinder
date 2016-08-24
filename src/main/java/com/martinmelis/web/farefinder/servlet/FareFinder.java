@@ -24,8 +24,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
 
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.Session;
 import com.martinmelis.web.farefinder.dao.*;
 import com.martinmelis.web.farefinder.farescraper.FareScraper;
 import com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource;
@@ -44,6 +42,7 @@ public class FareFinder extends HttpServlet{
 	  private FileDao dao;
 	  private FareScraper fareScraper;
 	  private ArrayList <String> origins;
+	  private Connection conn;
 	  
 	  DataSource dataSource = null;
 	  static int lport;
@@ -53,6 +52,7 @@ public class FareFinder extends HttpServlet{
 	  public FareFinder() throws SQLException, ClassNotFoundException {
 		  	  super();
 			//-----Defining the List of originating countries-----
+		  	  
 			  origins = new ArrayList <String> ();
 			  	origins.add("AT");
 			  	origins.add("SK");
@@ -69,60 +69,25 @@ public class FareFinder extends HttpServlet{
 			  	origins.add("ES");			  	
 			  	
 			  		
-			  	/*
-			  	
-			  	//-----connect to Database-----
-			  	try
-			  	{
-
-		            System.out
-		                    .println("-----------------------------------------------------");
-		            System.out
-		                    .println("init method has been called and servlet is initialized");
-		
-		            		            
-		            Context initContext = new InitialContext();
-		            Context envContext = (Context) initContext.lookup("java:/comp/env");
-		            dataSource = (DataSource) envContext.lookup("jdbc/farefinder");
-		            
-		            System.out.println("Using JDNI lookup got the DataSource : "+ dataSource);
-		
-		            System.out
-		                    .println("-----------------------------------------------------");
-			  	}
-
-			        catch( Exception exe )
-			        {
-			            exe.printStackTrace();
-			        }
-	            */
+			//-----------------connect to Database-----------------
+			    
+			    
+				Context initialContext=null;
+			    String dataResourceName = "jdbc/farefinder";
+				DataSource dataSource = null;
+				Context environmentContext = null;
+				try {
+					initialContext = new InitialContext();
+					environmentContext = (Context) initialContext.lookup("java:comp/env");
+					dataSource = (DataSource) environmentContext.lookup(dataResourceName);
+					conn = dataSource.getConnection();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}	    
+			
+		     //-------------------------------------------------
 	            
 			}
-	  
-	  
-	  
-	  public static void sslTunnel (){
-	        String user = "57ab68bb2d527108510001d0";
-	        String password = "mWecpW5nfj";
-	        String host = "farefinder-martinmelis.rhcloud.com";
-	        int port=22;
-	        try
-	            {
-	            JSch jsch = new JSch();
-	            Session session = jsch.getSession(user, host, port);
-	            jsch.addIdentity("/home/user/.ssh/id_rsa");
-	            lport = 4321;
-	            rhost = "localhost";
-	            rport = 46036;
-	            session.setPassword(password);
-	            session.setConfig("StrictHostKeyChecking", "no");
-	            System.out.println("Establishing Connection...");
-	            session.connect();
-	            int assinged_port=session.setPortForwardingL(lport, rhost, rport);
-	            System.out.println("localhost:"+assinged_port+" -> "+rhost+":"+rport);
-	            }
-	        catch(Exception e){System.err.print(e);}
-	    }
 	  
 	  
 	  @Override
@@ -131,140 +96,16 @@ public class FareFinder extends HttpServlet{
 	    // Set a cookie for the user, so that the counter does not increate
 	    HttpSession session = request.getSession(true);
 	    response.setContentType("text/plain");
-	    PrintWriter out = response.getWriter();
-	    
-		
-	  	//-----connect to Database-----
-	    
-	    
-		Context initialContext=null;
-		try {
-			initialContext = new InitialContext();
-		} catch (NamingException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
-		Context environmentContext = null;
-		try {
-			environmentContext = (Context) initialContext.lookup("java:comp/env");
-		} catch (NamingException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
-		String dataResourceName = "jdbc/farefinder";
-		DataSource dataSource = null;
-		try {
-			dataSource = (DataSource) environmentContext.lookup(dataResourceName);
-		} catch (NamingException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
-		Connection conn = null;
-		try {
-			conn = dataSource.getConnection();
-		} catch (SQLException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
-		StringBuilder msg = new StringBuilder();
-		
-		 //STEP 4: Execute a query
-	      System.out.println("Creating statement...");
-	      Statement stmt = null;
-		try {
-			stmt = conn.createStatement();
-		} catch (SQLException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
-
-	      String sql = "SELECT VERSION() as version";
-	      ResultSet rs = null;
-		try {
-			rs = stmt.executeQuery(sql);
-		} catch (SQLException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
-	      //STEP 5: Extract data from result set
-	      try {
-			while(rs.next()){
-			     //Retrieve by column name
-			     System.out.println(rs.getInt("version"));
-			  }
-		} catch (SQLException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
-	      try {
-			rs.close();
-		} catch (SQLException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
-	      
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    /*
-	    
-        	 System.out.println("-----Connecting to database-----");
-             Connection con = null;
-             String driver = "com.mysql.jdbc.Driver";
-             String url = "jdbc:mysql://127.0.0.1:46036/";
-             String db = "farefinder";
-             String dbUser = "adminhbdsaei";
-             String dbPasswd = "hhcXbX8hrHLP";
-             try {
-				Class.forName(driver);
-			} catch (ClassNotFoundException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-             try {
-				con = DriverManager.getConnection(url+db, dbUser, dbPasswd);
-			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-	    
-        //---------------------------
-        */
+	    PrintWriter out = response.getWriter();   
 	      
 	      
 	    fareScraper = new FareScraper();
 	    String fares = "";
 	    try {	    	
-			fares = fareScraper.getFares(origins);
+			fares = fareScraper.getFares(origins,conn);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	    if (session.isNew()) {
-	      count++;
-	    }
 	    out.println(fares);
 	    
 	  }
@@ -275,7 +116,9 @@ public class FareFinder extends HttpServlet{
 	  public void init() throws ServletException {
 	    dao = new FileDao();
 	    try {
-	      count = dao.getCount();
+	      count = dao.getCount() ;   
+	      
+	      
 	    } catch (Exception e) {
 	      getServletContext().log("An exception occurred in FileCounter", e);
 	      throw new ServletException("An exception occurred in FileCounter"

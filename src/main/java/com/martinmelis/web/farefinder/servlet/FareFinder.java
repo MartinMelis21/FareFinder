@@ -116,6 +116,7 @@ public class FareFinder extends HttpServlet{
 	  public void init() throws ServletException {
 	    dao = new FileDao();
 	    try {
+	    	//test
 	      count = dao.getCount() ;   
 	      
 	      

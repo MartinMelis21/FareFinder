@@ -42,6 +42,7 @@ public class FareScraper {
 	final String addAirportSQL = "INSERT INTO Airports (iataFaa, airportName, airportCity, airportCountry, latitude, longtitude, altitude, icao) values (?, ?, ?, ?, ?, ?, ?, ?)";
 	final String updateSSIDSQL = "UPDATE Airports SET SkyScannerID = ? WHERE iataFaa = ?";
 	private Connection conn = null;
+
 	//-----inicialization-----
 	
 	public FareScraper() throws IOException {
@@ -161,6 +162,7 @@ public class FareScraper {
 		}
 		in.close();
 		
+		skyScannerCon.disconnect();
 		return response.toString();
 	}
 
@@ -210,7 +212,7 @@ public class FareScraper {
 	     			
 	     			double dealRatio = price/getDistance(latOrigin,longOrigin,latDestination,longDestination);
 	     			
-	     			if (dealRatio>=0.015)
+	     			if (dealRatio>=0.025)
 	     				continue;
 	     				     			
 	     			finalResponse.append(("Outbound Leg\n\tFrom : " + originOutbound.getCityName() + " to " + destinationOutbound.getCityName() ) + "\n");
@@ -230,12 +232,14 @@ public class FareScraper {
 	     		}
 	     		
 	     		System.out.println();
+	     		
 	         }
 	      } catch (Exception e) {
 	         e.printStackTrace();
 	      }
 		}
-return finalResponse.toString();
+		
+		return finalResponse.toString();
 	}
 
 	public double getDistance (double originLat, double originLong, double destLat, double destLong)

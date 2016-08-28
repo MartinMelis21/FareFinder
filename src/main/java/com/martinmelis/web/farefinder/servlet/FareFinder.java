@@ -1,7 +1,9 @@
 package com.martinmelis.web.farefinder.servlet;
 
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -40,72 +42,35 @@ public class FareFinder extends HttpServlet{
 	  private static final long serialVersionUID = 1L;
 	  int count;
 	  private FileDao dao;
-	  private FareScraper fareScraper;
-	  private ArrayList <String> origins;
-	  private Connection conn;
 	  
 	  DataSource dataSource = null;
 	  static int lport;
 	  static String rhost;
 	  static int rport;
 	  
-	  public FareFinder() throws SQLException, ClassNotFoundException {
-		  	  super();
-			//-----Defining the List of originating countries-----
-		  	  
-			  origins = new ArrayList <String> ();
-			  	origins.add("AT");
-			  	origins.add("SK");
-			  	origins.add("CZ");
-			  	origins.add("HU");
-			  	origins.add("PL");
-			  	origins.add("DE");
-			  	origins.add("NO");
-			  	origins.add("SE");
-			  	origins.add("DK");
-			  	origins.add("UA");
-			  	origins.add("IT");
-			  	origins.add("PT");
-			  	origins.add("ES");			  	
-			  	
-			  		
-			//-----------------connect to Database-----------------
-			    
-			    
-				Context initialContext=null;
-			    String dataResourceName = "jdbc/farefinder";
-				DataSource dataSource = null;
-				Context environmentContext = null;
-				try {
-					initialContext = new InitialContext();
-					environmentContext = (Context) initialContext.lookup("java:comp/env");
-					dataSource = (DataSource) environmentContext.lookup(dataResourceName);
-					conn = dataSource.getConnection();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}	    
-			
-		     //-------------------------------------------------
-	            
-			}
 	  
 	  
 	  @Override
 	  protected void doGet(HttpServletRequest request,
 	     HttpServletResponse response) throws ServletException, IOException {
 	    // Set a cookie for the user, so that the counter does not increate
-	    HttpSession session = request.getSession(true);
 	    response.setContentType("text/plain");
-	    PrintWriter out = response.getWriter();   
-	      
-	      
-	    fareScraper = new FareScraper();
+	    PrintWriter out = response.getWriter();
 	    String fares = "";
-	    try {	    	
-			fares = fareScraper.getFares(origins,conn);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	    
+	    
+	    
+	    try(BufferedReader br = new BufferedReader(new FileReader("fares.txt"))) {
+	        StringBuilder sb = new StringBuilder();
+	        String line = br.readLine();
+
+	        while (line != null) {
+	            sb.append(line);
+	            sb.append(System.lineSeparator());
+	            line = br.readLine();
+	        }
+	       fares = sb.toString();
+	    }    
 	    out.println(fares);
 	    
 	  }

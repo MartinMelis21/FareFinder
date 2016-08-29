@@ -57,7 +57,7 @@ public class SchedulerJob implements Job {
 			    
 			    
 				Context initialContext=null;
-			    String dataResourceName = "jdbc/farefinder";
+			    String dataResourceName = "jdbc/MySQLDS";
 				DataSource dataSource = null;
 				Context environmentContext = null;
 				try {

@@ -26,6 +26,11 @@
     <url-pattern>/farefinder</url-pattern>
   </servlet-mapping> 
   
+   <servlet-mapping>
+    <servlet-name>StartupScheduler</servlet-name>
+    <url-pattern>/ss</url-pattern>
+  </servlet-mapping> 
+  
   <resource-ref>
    <description>DB Connection</description>
     <res-ref-name>jdbc/MySQLDS</res-ref-name>

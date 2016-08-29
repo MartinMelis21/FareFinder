@@ -11,6 +11,7 @@ public class AirportStructure {
 	private Double longtitude = 	null;
 	private Double altitude = 		null;
 	private Integer skyScannerID =	null;
+	private Integer zone =	null;
 	
 	public String getIataFaa() {
 		return iataFaa;
@@ -83,9 +84,17 @@ public class AirportStructure {
 	public void setSkyScannerID(Integer skyScannerID) {
 		this.skyScannerID = skyScannerID;
 	}
+	
+	public Integer getZone() {
+		return zone;
+	}
+
+	public void setZone(Integer zone) {
+		this.zone = zone;
+	}
 
 	public AirportStructure(String airportName, String cityName, String country, Double latitude, Double longtitude,
-			Integer skyScannerID, String iataFaa, Double altitude, String icao) {
+			Integer skyScannerID, String iataFaa, Double altitude, String icao, Integer zone) {
 		super();
 		this.airportName = airportName;
 		this.cityName = cityName;
@@ -96,6 +105,7 @@ public class AirportStructure {
 		this.skyScannerID = skyScannerID;
 		this.iataFaa = iataFaa;
 		this.altitude = altitude;
+		this.zone = zone;
 	}
 
 }

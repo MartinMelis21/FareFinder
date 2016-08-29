@@ -17,6 +17,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -38,7 +42,7 @@ public class FareScraper {
 	private final String USER_AGENT = "Mozilla/5.0";
 	private HashMap <Integer,AirportStructure> locationDictionary;
 	StringBuffer finalResponse;
-	final String getAirportSQL = "SELECT airportName,airportCity,airportCountry,latitude,longtitude,iataFaa,altitude,icao from Airports WHERE SkyScannerID = ?";
+	final String getAirportSQL = "SELECT a.airportName,a.airportCity,a.airportCountry,a.latitude,a.longtitude,a.iataFaa,a.altitude,a.icao,z.id from Airports a left join Countries c on a.airportCountry=c.countryName left join Zones z on c.zone=z.id WHERE SkyScannerID = ?";
 	final String addAirportSQL = "INSERT INTO Airports (iataFaa, airportName, airportCity, airportCountry, latitude, longtitude, altitude, icao) values (?, ?, ?, ?, ?, ?, ?, ?)";
 	final String updateSSIDSQL = "UPDATE Airports SET SkyScannerID = ? WHERE iataFaa = ?";
 	private Connection conn = null;
@@ -46,8 +50,14 @@ public class FareScraper {
 	//-----inicialization-----
 	
 	public FareScraper() throws IOException {
-		locationDictionary = new HashMap<Integer,AirportStructure>();	
-		finalResponse = new StringBuffer("Fares:\n");
+			locationDictionary = new HashMap<Integer,AirportStructure>();
+			DateTimeZone zone = DateTimeZone.forID("Europe/Bratislava");
+			DateTime dt = new DateTime(zone);
+			DateTimeFormatter fmt = DateTimeFormat.forPattern("HH:mm dd.MM.yyyy");
+
+ 		System.out.println("Last fares update:\t" + fmt.print(dt));	
+		finalResponse = new StringBuffer("Last fares update:\t" +fmt.print(dt));
+		finalResponse.append("\n\nFares:\n");
 	}	
 	
 	//-----Distance calculation-----
@@ -80,6 +90,8 @@ public class FareScraper {
 		String country = null;
 		String city = null;
 		String ICAO = null;
+		
+		Integer zone = null;
 
 		while ((inputLine = in.readLine()) != null) {
 				String patternName = "<tr valign=top><td>Name:</td><td colspan=2 class=\"fn org\">(.*?)</td></tr>";
@@ -132,7 +144,7 @@ public class FareScraper {
 		in.close();	
 	
 	if (name != null && latitude != null && longtitude != null)
-		return new AirportStructure(name, city, country, latitude, longtitude, null, iataCode, altitude, ICAO);
+		return new AirportStructure(name, city, country, latitude, longtitude, null, iataCode, altitude, ICAO, zone);
 	else
 		return null;
 	}
@@ -210,11 +222,14 @@ public class FareScraper {
 	     			double latDestination = destinationOutbound.getLatitude();
 	     			double longDestination = destinationOutbound.getLongtitude();
 	     			
+	     			int zoneOrigin = originOutbound.getZone();
+	     			int zoneDestination = destinationOutbound.getZone();
+	     			
 	     			double dealRatio = price/getDistance(latOrigin,longOrigin,latDestination,longDestination);
 	     			
-	     			if (dealRatio>=0.025)
+	     			//if i deal with intercontinental
+	     			if (!((zoneOrigin != zoneDestination && dealRatio<=0.040) || (zoneOrigin == zoneDestination && dealRatio<=0.015)))
 	     				continue;
-	     				     			
 	     			finalResponse.append(("Outbound Leg\n\tFrom : " + originOutbound.getCityName() + " to " + destinationOutbound.getCityName() ) + "\n");
 	     			finalResponse.append(("\tDate : " + ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
 	     			finalResponse.append(("Inbound Leg\n\tFrom : " + originInbound.getCityName()  + " to " + destinationInbound.getCityName() ) + "\n");
@@ -340,6 +355,7 @@ public class FareScraper {
  			Double altitude = 		null;
  			String icao=			null;
  			String iataFaa=			null;
+ 			Integer zone = 			null;
  			
  			if (resultSet.next()) {  		     	
      			airportName = 	resultSet.getString(1);
@@ -350,6 +366,7 @@ public class FareScraper {
      			iataFaa =		resultSet.getString(6);  
      			altitude=		resultSet.getDouble(7); 
      			icao=			resultSet.getString(8); 
+     			zone =			resultSet.getInt(9); 
      			
      			resultSet.close();
  			}
@@ -362,7 +379,7 @@ public class FareScraper {
  	 			return airportStructure;
  			}
  			
- 			AirportStructure airportStructure = new AirportStructure(airportName,cityName,country,latitude,longtitude,SSID,iataFaa, altitude, icao);
+ 			AirportStructure airportStructure = new AirportStructure(airportName,cityName,country,latitude,longtitude,SSID,iataFaa, altitude, icao,zone);
  			locationDictionary.put(SSID, airportStructure);
  			
  			return airportStructure;

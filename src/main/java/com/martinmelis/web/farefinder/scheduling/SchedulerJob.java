@@ -50,7 +50,8 @@ public class SchedulerJob implements Job {
 			  	origins.add("UA");
 			  	origins.add("IT");
 			  	origins.add("PT");
-			  	origins.add("ES");			  	
+			  	origins.add("ES");
+			  	origins.add("UK");
 			  	
 			  		
 			//-----------------connect to Database-----------------

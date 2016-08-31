@@ -236,12 +236,12 @@ public class FareScraper {
 	     				continue;
 	     			String fare = "";
 	     			
-	     			fare.concat(("Outbound Leg\n\tFrom : " + originOutbound.getCityName() + " to " + destinationOutbound.getCityName() ) + "\n");
-	     			fare.concat(("\tDate : " + ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
-	     			fare.concat(("Inbound Leg\n\tFrom : " + originInbound.getCityName()  + " to " + destinationInbound.getCityName() ) + "\n");
-	     			fare.concat(("\tDate : " + ((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
-	     			fare.concat(("Price : " + price) + "\n");
-	     			fare.concat(("DealRatio : " + dealRatio) + "\n"+ "\n");
+	     			fare += (("Outbound Leg\n\tFrom : " + originOutbound.getCityName() + " to " + destinationOutbound.getCityName() ) + "\n");
+	     			fare += (("\tDate : " + ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
+	     			fare += (("Inbound Leg\n\tFrom : " + originInbound.getCityName()  + " to " + destinationInbound.getCityName() ) + "\n");
+	     			fare += (("\tDate : " + ((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
+	     			fare += (("Price : " + price) + "\n");
+	     			fare += (("DealRatio : " + dealRatio) + "\n"+ "\n");
 	     			
 	     			
 	     			finalResponse.append(fare);

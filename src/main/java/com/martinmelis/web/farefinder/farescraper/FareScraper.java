@@ -243,6 +243,7 @@ public class FareScraper {
 	     			fare.concat(("Price : " + price) + "\n");
 	     			fare.concat(("DealRatio : " + dealRatio) + "\n"+ "\n");
 	     			
+	     			
 	     			finalResponse.append(fare);
 	     			
 	     			//if (zoneOrigin != zoneDestination && dealRatio<=0.030)

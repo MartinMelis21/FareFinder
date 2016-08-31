@@ -95,7 +95,7 @@ public class SchedulerJob implements Job {
 	        FileWriter faresWriter = new FileWriter(faresFile, false); // true to append	                             
 	        faresWriter.write(fares);
 	        faresWriter.close();
-	        
+	        conn.close();
 	        
 	        
 		} catch (Exception e) {

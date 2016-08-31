@@ -28,6 +28,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import com.martinmelis.web.farefinder.modules.MailSender;
+
 import dataTypes.AirportStructure;
 
 import java.io.*;
@@ -46,6 +48,7 @@ public class FareScraper {
 	final String addAirportSQL = "INSERT INTO Airports (iataFaa, airportName, airportCity, airportCountry, latitude, longtitude, altitude, icao) values (?, ?, ?, ?, ?, ?, ?, ?)";
 	final String updateSSIDSQL = "UPDATE Airports SET SkyScannerID = ? WHERE iataFaa = ?";
 	private Connection conn = null;
+	private MailSender mailSender = null;
 
 	//-----inicialization-----
 	
@@ -54,6 +57,7 @@ public class FareScraper {
 			DateTimeZone zone = DateTimeZone.forID("Europe/Bratislava");
 			DateTime dt = new DateTime(zone);
 			DateTimeFormatter fmt = DateTimeFormat.forPattern("HH:mm dd.MM.yyyy");
+			mailSender = new MailSender ();
 
  		System.out.println("Last fares update:\t" + fmt.print(dt));	
 		finalResponse = new StringBuffer("Last fares update:\t" +fmt.print(dt));
@@ -230,12 +234,19 @@ public class FareScraper {
 	     			//if i deal with intercontinental
 	     			if (!((zoneOrigin != zoneDestination && dealRatio<=0.040) || (zoneOrigin == zoneDestination && dealRatio<=0.015)))
 	     				continue;
-	     			finalResponse.append(("Outbound Leg\n\tFrom : " + originOutbound.getCityName() + " to " + destinationOutbound.getCityName() ) + "\n");
-	     			finalResponse.append(("\tDate : " + ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
-	     			finalResponse.append(("Inbound Leg\n\tFrom : " + originInbound.getCityName()  + " to " + destinationInbound.getCityName() ) + "\n");
-	     			finalResponse.append(("\tDate : " + ((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
-	     			finalResponse.append(("Price : " + price) + "\n");
-	     			finalResponse.append(("DealRatio : " + dealRatio) + "\n"+ "\n");
+	     			String fare = "";
+	     			
+	     			fare.concat(("Outbound Leg\n\tFrom : " + originOutbound.getCityName() + " to " + destinationOutbound.getCityName() ) + "\n");
+	     			fare.concat(("\tDate : " + ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
+	     			fare.concat(("Inbound Leg\n\tFrom : " + originInbound.getCityName()  + " to " + destinationInbound.getCityName() ) + "\n");
+	     			fare.concat(("\tDate : " + ((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent()) + "\n");
+	     			fare.concat(("Price : " + price) + "\n");
+	     			fare.concat(("DealRatio : " + dealRatio) + "\n"+ "\n");
+	     			
+	     			finalResponse.append(fare);
+	     			
+	     			//if (zoneOrigin != zoneDestination && dealRatio<=0.030)
+	     			//	mailSender.sendMail("martin.melis21@gmail.com", fare);
 	     			
 	     			System.out.println("Outbound Leg\n\tFrom : " + originOutbound.getCityName()  + " to " + destinationOutbound.getCityName() );
 	     			System.out.println("\tDate : " + ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent());

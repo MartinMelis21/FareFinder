@@ -228,11 +228,12 @@ public class FareScraper {
 	     			
 	     			int zoneOrigin = originOutbound.getZone();
 	     			int zoneDestination = destinationOutbound.getZone();
+	     			double distance = getDistance(latOrigin,longOrigin,latDestination,longDestination);
 	     			
-	     			double dealRatio = price/getDistance(latOrigin,longOrigin,latDestination,longDestination);
+	     			double dealRatio = price/(2*distance);
 	     			
 	     			//if i deal with intercontinental
-	     			if (!((zoneOrigin != zoneDestination && dealRatio<=0.040) || (zoneOrigin == zoneDestination && dealRatio<=0.015)))
+	     			if (!((zoneOrigin != zoneDestination && dealRatio<=0.030) || (zoneOrigin == zoneDestination && dealRatio<=0.015)))
 	     				continue;
 	     			String fare = "";
 	     			
@@ -269,27 +270,15 @@ public class FareScraper {
 		return finalResponse.toString();
 	}
 
-	public double getDistance (double originLat, double originLong, double destLat, double destLong)
-	{
-		double x1 = Math.toRadians(originLat);
-        double y1 = Math.toRadians(originLong);
-        double x2 = Math.toRadians(destLat);
-        double y2 = Math.toRadians(destLong);
+	public double getDistance (double lat1, double lon1, double lat2, double lon2) {
+		double theta = lon1 - lon2;
+		double dist = Math.sin((lat1 * Math.PI / 180.0)) * Math.sin((lat2 * Math.PI / 180.0)) + Math.cos((lat1 * Math.PI / 180.0)) * Math.cos((lat2 * Math.PI / 180.0)) * Math.cos((theta * Math.PI / 180.0));
+		dist = Math.acos(dist);
+		dist = dist * 180 / Math.PI;
+		dist = dist * 60 * 1.1515;
+			dist = dist * 1.609344;
 
-       /*************************************************************************
-        * Compute using law of cosines
-        *************************************************************************/
-        // great circle distance in radians
-        double angle = Math.acos(Math.sin(x1) * Math.sin(x2)
-                      + Math.cos(x1) * Math.cos(x2) * Math.cos(y1 - y2));
-
-        // convert back to degrees
-        angle = Math.toDegrees(angle);
-
-        // each degree on a great circle of Earth is 60 nautical miles
-        double distance = 60 * angle * 1.852;
-
-        return distance;
+		return (dist);
 	}
 	
 	public void insertAirport (AirportStructure airport, Connection conn) throws SQLException

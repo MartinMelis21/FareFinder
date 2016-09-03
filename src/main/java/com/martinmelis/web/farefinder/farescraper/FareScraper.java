@@ -233,7 +233,7 @@ public class FareScraper {
 	     			double dealRatio = price/(2*distance);
 	     			
 	     			//if i deal with intercontinental
-	     			if (!((zoneOrigin != zoneDestination && dealRatio<=0.010) || (zoneOrigin == zoneDestination && dealRatio<=0.008)))
+	     			if (!((zoneOrigin != zoneDestination && dealRatio<=0.015) || (zoneOrigin == zoneDestination && dealRatio<=0.008)))
 	     				continue;
 	     			String fare = "";
 	     			

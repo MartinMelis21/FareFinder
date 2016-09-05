@@ -26,7 +26,8 @@ import org.quartz.JobExecutionException;
 
 import com.martinmelis.web.farefinder.farescraper.FareScraper;
 
-public class SchedulerJob implements Job {
+
+public class SchedulerJob implements org.quartz.StatefulJob {
 	
 		private ArrayList <String> origins;
 		private Connection conn;

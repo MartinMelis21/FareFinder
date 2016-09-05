@@ -44,9 +44,13 @@ public class FareScraper {
 	private final String USER_AGENT = "Mozilla/5.0";
 	private HashMap <Integer,AirportStructure> locationDictionary;
 	StringBuffer finalResponse;
-	final String getAirportSQL = "SELECT a.airportName,a.airportCity,a.airportCountry,a.latitude,a.longtitude,a.iataFaa,a.altitude,a.icao,z.id from Airports a left join Countries c on a.airportCountry=c.countryName left join Zones z on c.zone=z.id WHERE SkyScannerID = ?";
-	final String addAirportSQL = "INSERT INTO Airports (iataFaa, airportName, airportCity, airportCountry, latitude, longtitude, altitude, icao) values (?, ?, ?, ?, ?, ?, ?, ?)";
-	final String updateSSIDSQL = "UPDATE Airports SET SkyScannerID = ? WHERE iataFaa = ?";
+	final String getAirportSQL = 		"SELECT a.airportName,a.airportCity,a.airportCountry,a.latitude,a.longtitude,a.iataFaa,a.altitude,a.icao,z.id from Airports a left join Countries c on a.airportCountry=c.countryName left join Zones z on c.zone=z.id WHERE SkyScannerID = ?";
+	final String addAirportSQL = 		"INSERT INTO Airports (iataFaa, airportName, airportCity, airportCountry, latitude, longtitude, altitude, icao) values (?, ?, ?, ?, ?, ?, ?, ?)";
+	final String updateSSIDSQL = 		"UPDATE Airports SET SkyScannerID = ? WHERE iataFaa = ?";
+	final String checkFareExistance = 	"SELECT numberOfAccountedPricesRoundTrip, averagePriceRoundTrip FROM Fares WHERE origin = (SELECT airportID FROM Airports WHERE iataFaa = ?) AND destination = (SELECT airportID FROM Airports WHERE iataFaa = ?)";
+	final String updateRoutePrice = 	"UPDATE Fares SET numberOfAccountedPricesRoundTrip = ?,lastAccountedPriceRoundTrip = ?,lastAccountedPriceTimeRoundTrip = NOW(),averagePriceRoundTrip = ? WHERE origin=(SELECT airportID FROM Airports WHERE iataFaa = ?) AND destination = (SELECT airportID FROM Airports WHERE iataFaa = ?)";
+	final String insertRoutePrice = 	"INSERT INTO Fares (origin,destination,lastAccountedPriceTimeRoundTrip,lastAccountedPriceRoundTrip,numberOfAccountedPricesRoundTrip,averagePriceRoundTrip)VALUES ((SELECT airportID FROM Airports WHERE iataFaa = ?),(SELECT airportID FROM Airports WHERE iataFaa = ?),NOW(),?,1,?);";
+	
 	private Connection conn = null;
 	private MailSender mailSender = null;
 
@@ -226,6 +230,50 @@ public class FareScraper {
 	     			double latDestination = destinationOutbound.getLatitude();
 	     			double longDestination = destinationOutbound.getLongtitude();
 	     			
+	     			//I account the fare price to database of Fares
+	     			
+	     			ResultSet resultSet = null;
+	     			PreparedStatement ps = conn.prepareStatement(checkFareExistance);
+     				ps.setString(1, originOutbound.getIataFaa().toUpperCase());
+     				ps.setString(2, destinationOutbound.getIataFaa().toUpperCase());
+     				//If current route is covered
+     				resultSet = ps.executeQuery();
+     				
+					if (resultSet.next())
+     				{
+						int numberOfAccountedPricesRoundTrip =	resultSet.getInt(1);
+     					double averagePriceRoundTrip = 			resultSet.getDouble(2);
+     		     		resultSet.close();
+     					
+     					double newAveragePriceRoundTrip = ((numberOfAccountedPricesRoundTrip*averagePriceRoundTrip)+(double)price)/(double)(numberOfAccountedPricesRoundTrip+1);
+     					numberOfAccountedPricesRoundTrip++;
+     					ps = conn.prepareStatement(updateRoutePrice);
+     					int lastAccountedPriceRoundTrip = price;
+         				ps.setInt(1, numberOfAccountedPricesRoundTrip);
+     					ps.setInt(2, lastAccountedPriceRoundTrip);
+         				ps.setDouble(3, newAveragePriceRoundTrip);
+         				ps.setString(4, originOutbound.getIataFaa().toUpperCase());
+         				ps.setString(5, destinationOutbound.getIataFaa().toUpperCase());
+         				
+         				ps.executeUpdate();
+     					
+     				}
+     				//If current route is yet not covered
+     				else
+     				{
+     					ps = conn.prepareStatement(insertRoutePrice);
+         				ps.setString(1, originOutbound.getIataFaa().toUpperCase());
+     					ps.setString(2, destinationOutbound.getIataFaa().toUpperCase());
+         				ps.setInt(3, price);
+         				ps.setDouble(4, price);	
+     					
+         				ps.executeUpdate();
+         				
+     				}	
+	     			
+	     			
+	     			
+	     			
 	     			int zoneOrigin = originOutbound.getZone();
 	     			int zoneDestination = destinationOutbound.getZone();
 	     			double distance = getDistance(latOrigin,longOrigin,latDestination,longDestination);
@@ -247,7 +295,7 @@ public class FareScraper {
 	     			
 	     			finalResponse.append(fare);
 	     			
-	     			//if (zoneOrigin != zoneDestination && dealRatio<=0.030)
+	     			//if (zoneOrigin != zoneDestination && dealRatio<=0.015)
 	     			//	mailSender.sendMail("martin.melis21@gmail.com", fare);
 	     			
 	     			System.out.println("Outbound Leg\n\tFrom : " + originOutbound.getCityName()  + " to " + destinationOutbound.getCityName() );
@@ -298,7 +346,7 @@ public class FareScraper {
 	}
 	
 	
-	public void updateSSID (NodeList locationList, int ssid, Connection conn) throws SQLException, XPathExpressionException, IOException, ParserConfigurationException, SAXException
+	public void updateSSID (NodeList locationList, int ssid, Connection conn) throws XPathExpressionException, IOException, ParserConfigurationException, SAXException, SQLException
 	{
 		for (int temp = 0; temp < locationList.getLength(); temp++) {
 
@@ -324,7 +372,22 @@ public class FareScraper {
      				ps.setInt(1, ssid);
      				ps.setString(2, iataCode.toUpperCase());
      				if (ps.executeUpdate()==0)
-     					insertAirport(accountNewAirport(iataCode.toUpperCase()), conn);
+     				{
+     					AirportStructure newAirport = accountNewAirport(iataCode.toUpperCase());
+						try {
+							insertAirport(newAirport, conn);
+						} catch (SQLException e) {
+							e.printStackTrace();
+							System.out.println(newAirport.getIataFaa());
+							System.out.println(newAirport.getAirportName());
+							System.out.println(newAirport.getCityName());
+							System.out.println(newAirport.getCountry());
+							System.out.println(newAirport.getLatitude());
+							System.out.println(newAirport.getLongtitude());
+							System.out.println(newAirport.getAltitude());
+							System.out.println(newAirport.getIcao());
+						}
+     				}
      				
      			}
      			

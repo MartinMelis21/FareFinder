@@ -193,7 +193,7 @@ public class FareScraper {
 	     			
 	     			fareDescription += (("Outbound Leg\n\tFrom : " + fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName() ) + "\n");
 	     			fareDescription += ("\tDate : " + fare.getOutboundLeg().toString() + "\n");
-	     			fareDescription += (("Inbound Leg\n\tFrom : " + fare.getOrigin().getCityName()  + " to " + fare.getDestination().getCityName() ) + "\n");
+	     			fareDescription += (("Inbound Leg\n\tFrom : " + fare.getDestination().getCityName()  + " to " + fare.getOrigin().getCityName() ) + "\n");
 	     			fareDescription += ("\tDate : " + fare.getInboundLeg().toString() + "\n");
 	     			fareDescription += (("Price : " + fare.getPrice()) + "\n");
 	     			fareDescription += ("Average price on this route : " + fare.getBaseFare() + "\n");
@@ -261,7 +261,7 @@ public class FareScraper {
 
      			System.out.println("Outbound Leg\n\tFrom : " + fare.getOrigin().getCityName()  + " to " + fare.getDestination().getCityName() );
      			System.out.println("\tDate : " + fare.getOutboundLeg().toString());
-     			System.out.println("Inbound Leg\n\tFrom : " + fare.getOrigin().getCityName()  + " to " + fare.getDestination().getCityName() );
+     			System.out.println("Inbound Leg\n\tFrom : " + fare.getDestination().getCityName()  + " to " + fare.getOrigin().getCityName() );
      			System.out.println("\tDate : " + fare.getInboundLeg().toString());
      			System.out.println("Price : " + fare.getPrice());
      			System.out.println("Average price on this route : " + fare.getBaseFare());

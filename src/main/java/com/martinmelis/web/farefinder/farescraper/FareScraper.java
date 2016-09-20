@@ -7,12 +7,19 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,14 +62,14 @@ public class FareScraper {
 	final String getAirportOnIDSQL = 		"SELECT a.airportName,a.airportCity,a.airportCountry,a.latitude,a.longtitude,a.iataFaa,a.altitude,a.icao,z.id, a.airportID, a.SkyScannerID from Airports a left join Countries c on a.airportCountry=c.countryName left join Zones z on c.zone=z.id WHERE airportID = ?";
 	final String getAirportOnSSIDSQL = 		"SELECT a.airportName,a.airportCity,a.airportCountry,a.latitude,a.longtitude,a.iataFaa,a.altitude,a.icao,z.id, a.airportID, a.SkyScannerID from Airports a left join Countries c on a.airportCountry=c.countryName left join Zones z on c.zone=z.id WHERE SkyScannerID = ?";
 	final String getAirportOnIataFaaSQL = 	"SELECT a.airportName,a.airportCity,a.airportCountry,a.latitude,a.longtitude,a.iataFaa,a.altitude,a.icao,z.id, a.airportID, a.SkyScannerID from Airports a left join Countries c on a.airportCountry=c.countryName left join Zones z on c.zone=z.id WHERE a.iataFaa = ?";
-	final String getFareSQL = 			"SELECT o.airportName,o.airportCity,o.airportCountry,o.latitude,o.longtitude,o.iataFaa,o.altitude,o.icao,oc.zone,d.airportName,d.airportCity,d.airportCountry,d.latitude,d.longtitude,d.iataFaa,d.altitude,d.icao,dc.zone,f.lastAccountedPriceRoundTrip, f.numberOfAccountedPricesRoundTrip, f.averagePriceRoundTrip, o.SkyScannerID, d.SkyScannerID from Fares f, Airports o, Airports d, Countries oc, Countries dc where f.origin = ? and f.destination = ? and f.origin=o.airportID and f.destination=d.airportID and oc.countryName=o.airportCountry and dc.countryName=d.airportCountry";
-	final String addAirportSQL = 		"INSERT INTO Airports (iataFaa, airportName, airportCity, airportCountry, latitude, longtitude, altitude, icao) values (?, ?, ?, ?, ?, ?, ?, ?)";
-	final String updateSSIDSQL = 		"UPDATE Airports SET SkyScannerID = ? WHERE iataFaa = ?";
-	final String checkFareExistance = 	"SELECT numberOfAccountedPricesRoundTrip, averagePriceRoundTrip FROM Fares WHERE origin = (SELECT airportID FROM Airports WHERE iataFaa = ?) AND destination = (SELECT airportID FROM Airports WHERE iataFaa = ?)";
-	final String updateRoutePrice = 	"UPDATE Fares SET numberOfAccountedPricesRoundTrip = ?,lastAccountedPriceRoundTrip = ?,lastAccountedPriceTimeRoundTrip = NOW(),averagePriceRoundTrip = ? WHERE origin=(SELECT airportID FROM Airports WHERE iataFaa = ?) AND destination = (SELECT airportID FROM Airports WHERE iataFaa = ?)";
-	final String insertRoutePrice = 	"INSERT INTO Fares (origin,destination,lastAccountedPriceTimeRoundTrip,lastAccountedPriceRoundTrip,numberOfAccountedPricesRoundTrip,averagePriceRoundTrip)VALUES ((SELECT airportID FROM Airports WHERE iataFaa = ?),(SELECT airportID FROM Airports WHERE iataFaa = ?),NOW(),?,1,?);";
-	final String getSSIDMapping =		"SELECT airportID,SkyScannerID FROM Airports";
-	final String getIataMapping =		"SELECT airportID,iataFaa FROM Airports";
+	final String getFareSQL = 				"SELECT o.airportName,o.airportCity,o.airportCountry,o.latitude,o.longtitude,o.iataFaa,o.altitude,o.icao,oc.zone,d.airportName,d.airportCity,d.airportCountry,d.latitude,d.longtitude,d.iataFaa,d.altitude,d.icao,dc.zone,f.lastAccountedPriceRoundTrip, f.numberOfAccountedPricesRoundTrip, f.averagePriceRoundTrip, o.SkyScannerID, d.SkyScannerID from Fares f, Airports o, Airports d, Countries oc, Countries dc where f.origin = ? and f.destination = ? and f.origin=o.airportID and f.destination=d.airportID and oc.countryName=o.airportCountry and dc.countryName=d.airportCountry";
+	final String addAirportSQL = 			"INSERT INTO Airports (iataFaa, airportName, airportCity, airportCountry, latitude, longtitude, altitude, icao) values (?, ?, ?, ?, ?, ?, ?, ?)";
+	final String updateSSIDSQL = 			"UPDATE Airports SET SkyScannerID = ? WHERE iataFaa = ?";
+	final String checkFareExistance = 		"SELECT numberOfAccountedPricesRoundTrip, averagePriceRoundTrip FROM Fares WHERE origin = (SELECT airportID FROM Airports WHERE iataFaa = ?) AND destination = (SELECT airportID FROM Airports WHERE iataFaa = ?)";
+	final String updateRoutePrice = 		"UPDATE Fares SET numberOfAccountedPricesRoundTrip = ?,lastAccountedPriceRoundTrip = ?,lastAccountedPriceTimeRoundTrip = NOW(),averagePriceRoundTrip = ? WHERE origin=(SELECT airportID FROM Airports WHERE iataFaa = ?) AND destination = (SELECT airportID FROM Airports WHERE iataFaa = ?)";
+	final String insertRoutePrice = 		"INSERT INTO Fares (origin,destination,lastAccountedPriceTimeRoundTrip,lastAccountedPriceRoundTrip,numberOfAccountedPricesRoundTrip,averagePriceRoundTrip)VALUES ((SELECT airportID FROM Airports WHERE iataFaa = ?),(SELECT airportID FROM Airports WHERE iataFaa = ?),NOW(),?,1,?);";
+	final String getSSIDMapping =			"SELECT airportID,SkyScannerID FROM Airports";
+	final String getIataMapping =			"SELECT airportID,iataFaa FROM Airports";
 	
 	private Connection conn = null;
 	private MailSender mailSender = null;
@@ -166,11 +173,93 @@ public class FareScraper {
 	else
 		return null;
 	}
+	
+	public ArrayList<RoundTripFare> filterFares(ArrayList<RoundTripFare> fares)
+	{
+		ArrayList<RoundTripFare> filteredFares = new ArrayList<RoundTripFare> ();
+		ArrayList<Integer> skipIndexes = new ArrayList<Integer>();
+		int outterIndex, innerIndex;
+		RoundTripFare outterPivotFare = null;
+		RoundTripFare innerPivotFare = null;
+		RoundTripFare cheapestFare = null;
+		
+		for (outterIndex = 0;outterIndex < (fares.size()-1);outterIndex++)
+		{
+			if (skipIndexes.contains(outterIndex))
+				continue;
+			
+			outterPivotFare = fares.get(outterIndex);
+			cheapestFare = outterPivotFare;
+			for (innerIndex = (outterIndex+1);innerIndex < fares.size();innerIndex++)
+			{
+				if (skipIndexes.contains(innerIndex))
+					continue;
+				
+				innerPivotFare = fares.get(innerIndex);
+				
+				if (innerPivotFare.getOrigin().equals(outterPivotFare.getOrigin()) && innerPivotFare.getDestination().equals(outterPivotFare.getDestination()))
+				{
+					skipIndexes.add(innerIndex);
+					if (innerPivotFare.getPrice() < cheapestFare.getPrice())
+					{
+						cheapestFare = 	innerPivotFare;
+					}
+				}
+				
+				
+			}
+			filteredFares.add(cheapestFare);
+		}
+		
+		return filteredFares;
+	}
 
+	public String getFaresString (ArrayList <String> countryList, Connection conn) throws Exception
+	{
+		ArrayList<RoundTripFare> results = getFares(countryList,conn);
+		Date date= new Date();
+		Timestamp stamp = new Timestamp(date.getTime());
+		String faresDescription = "Last Fares update \t\t" + stamp;
+		
+		for (RoundTripFare fare : results)
+		{
+ 			
+ 			faresDescription += (("Outbound Leg\n\tFrom : " + fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName() ) + "\n");
+ 			faresDescription += ("\tDate : " + fare.getOutboundLeg().toString() + "\n");
+ 			faresDescription += (("Inbound Leg\n\tFrom : " + fare.getDestination().getCityName()  + " to " + fare.getOrigin().getCityName() ) + "\n");
+ 			faresDescription += ("\tDate : " + fare.getInboundLeg().toString() + "\n");
+ 			faresDescription += (("Price : " + fare.getPrice()) + "\n");
+ 			faresDescription += ("Average price on this route : " + fare.getBaseFare() + "\n");
+ 			faresDescription += (("Sale : " + fare.getSaleRatio()) + "\n");
+ 			faresDescription += (("DealRatio : " + fare.getDealRatio()) + "\n"+ "\n");
+ 			finalResponse.append(faresDescription);
+		}
+		
+	return 	faresDescription;
+	}
 	//-----Fetching the Fares Data and Quote Metadata-----
-	public String getFares(ArrayList <String> countryList, Connection conn) throws Exception {
+	
+	public static ArrayList<RoundTripFare> sortFares(ArrayList<RoundTripFare> fares) {
+		
+		ArrayList<RoundTripFare> sortedFares = fares;
+		
+		Collections.sort(sortedFares, 
+		    new Comparator<RoundTripFare>() {
+		        @Override
+		        public int compare(RoundTripFare e1, RoundTripFare e2) {
+		            return ((Double)e2.getDealRatio()).compareTo(((Double)e1.getDealRatio()));
+		        }
+		    }
+		);
+		
+		return sortedFares;
+		}
+	
+	public ArrayList<RoundTripFare> getFares(ArrayList <String> countryList, Connection conn) throws Exception {
 		
 		this.conn=conn;
+		ArrayList<RoundTripFare> filteredFares = new ArrayList<RoundTripFare> ();
+		ArrayList<RoundTripFare> resultFares = new ArrayList<RoundTripFare> ();
 		
 		for (String origin: countryList)
 		{
@@ -181,33 +270,33 @@ public class FareScraper {
 			ArrayList<RoundTripFare> 	fares= new ArrayList <RoundTripFare> ();
 			fares.addAll(faresSS);
 			fares.addAll(faresKiwi);
-			
-	     	for (int temp = 0; temp < fares.size(); temp++) {
+						
+			//-----------------------------------------------------
+			filteredFares = filterFares(fares);
+						
+	     	for (int temp = 0; temp < filteredFares.size(); temp++) 
+	     		{
 	     		
-	     			RoundTripFare fare = fares.get(temp);	     		
+	     			RoundTripFare fare = filteredFares.get(temp);
+	     			
+	     			if (fare.getIsNew())
+	     				insertDatabaseFare (fare);
+	     			else
+	     				updateDatabaseFare(fare);
 	     		
-	     			if (fare.getOrigin().getZone() == fare.getDestination().getZone()  || fare.getPrice() > 250 || fare.getSaleRatio()<30)
+	     			if (fare.getOrigin().getZone() == fare.getDestination().getZone()  || fare.getPrice() > 300 || fare.getSaleRatio()<30)
 	     				continue;
 	     			
-	     			String fareDescription = "";
+	     			resultFares.add(fare);
 	     			
-	     			fareDescription += (("Outbound Leg\n\tFrom : " + fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName() ) + "\n");
-	     			fareDescription += ("\tDate : " + fare.getOutboundLeg().toString() + "\n");
-	     			fareDescription += (("Inbound Leg\n\tFrom : " + fare.getDestination().getCityName()  + " to " + fare.getOrigin().getCityName() ) + "\n");
-	     			fareDescription += ("\tDate : " + fare.getInboundLeg().toString() + "\n");
-	     			fareDescription += (("Price : " + fare.getPrice()) + "\n");
-	     			fareDescription += ("Average price on this route : " + fare.getBaseFare() + "\n");
-	     			fareDescription += (("Sale : " + fare.getSaleRatio()) + "\n");
-	     			fareDescription += (("DealRatio : " + fare.getDealRatio()) + "\n"+ "\n");
-	     			
-	     			
-	     			finalResponse.append(fareDescription);
-	     			
+	     			//TODO mail notification
 	     			//if (zoneOrigin != zoneDestination && dealRatio<=0.015)
 	     			//	mailSender.sendMail("martin.melis21@gmail.com", fare);
-	     		}	     		
+	     			
+	     		}
 	         }		
-		return finalResponse.toString();
+		
+		return sortFares(resultFares);
 	}
 	
 	public ArrayList <RoundTripFare> getFareListSS (String origin) throws Exception
@@ -238,12 +327,13 @@ public class FareScraper {
      			Element eElement = (Element) nNode;     			
      			int price = Integer.parseInt(eElement.getElementsByTagName("MinPrice").item(0).getTextContent());
      			//TODO problem with time conversion from format
-     			DateFormat df = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss", Locale.GERMANY);
-     			Date outboundDate = 	df.parse(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent().replaceAll("T"," "));
-     			Date inboundDate = 		df.parse(((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent().replaceAll("T"," "));
+     			DateFormat df = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss", Locale.ENGLISH);
+     			String outboundDateString = ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent().replaceAll("T"," ");
+     			String inboundDateString = ((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent().replaceAll("T"," ");
      			
+     			Date outboundDate = 	df.parse(outboundDateString);
+     			Date inboundDate = 		df.parse(inboundDateString);
      			
-     			//TODO We need to translate SSIDs to IDs
      			
      			int originSSID =		Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("OriginId").item(0).getTextContent());
      			int destinationSSID = 	Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DestinationId").item(0).getTextContent());
@@ -305,7 +395,7 @@ public class FareScraper {
      			String originIata = eElement.getElementsByTagName("flyFrom").item(0).getTextContent();
      			String destinationIata = eElement.getElementsByTagName("flyTo").item(0).getTextContent();
      			//TODO problem with time conversion from format
-     			DateFormat df = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss", Locale.GERMANY);     			
+     			DateFormat df = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss", Locale.ENGLISH);     			
      			Date outboundDate = 	df.parse(((Element) eElement.getElementsByTagName("route").item(0)).getElementsByTagName("aTimeUTC").item(0).getTextContent());
      			Date inboundDate = 		df.parse(((Element) eElement.getElementsByTagName("route").item(1)).getElementsByTagName("aTimeUTC").item(0).getTextContent());
      			
@@ -595,7 +685,7 @@ public class FareScraper {
  			Integer originSSID =			 	null;
  			Integer destinationSSID =		 	null;
  			
- 			// In case we know such a fare and thus now all airports
+ 			// In case we know such a fare and thus know all airports
  			if (resultSet.next()) {  		     	
      			originAirportName = 			resultSet.getString(1);
      			originCityName = 				resultSet.getString(2);
@@ -643,8 +733,8 @@ public class FareScraper {
      	 			locationDictionary.put(destinationID, destination);
      			}
      			
-     			
-     			updateDatabaseFare(origin,destination,price,numberOfPricesRoundTrip,averageAccountedPrice);
+     			fare = new RoundTripFare (origin, destination, price, outbound, inbound, averageAccountedPrice,numberOfPricesRoundTrip); 
+     			     			
  			}
  			// In case Fare is not accounted, either we know airports, but dont know fare, or we dont know one airport, or we dont know any of airports
  			else
@@ -652,43 +742,45 @@ public class FareScraper {
  				// In this case I need to do additional SQL calls
  				origin = getAirportInfo (originID); 				
  				destination = getAirportInfo (destinationID);		
- 				insertDatabaseFare (origin,destination,price);
- 			}
- 			//  Create Fare Object
- 			fare = new RoundTripFare (origin, destination, price, outbound, inbound, averageAccountedPrice); 			
+ 				
+ 				fare = new RoundTripFare (origin, destination, price, outbound, inbound, averageAccountedPrice,0); 
+     			fare.setIsNew();
+ 			}			
  			return fare;
 		}	
 		
-	public void updateDatabaseFare(AirportStructure origin, AirportStructure destination, int price, int numberOfAccountedPricesRoundTrip, double averagePriceRoundTrip) throws SQLException
+	public void updateDatabaseFare(RoundTripFare fare) throws SQLException
 		{
  			PreparedStatement ps = null;
+ 			Integer numberOfAccountedPricesRoundTrip = fare.getNumberOfAccountedPricesRoundTrip();
+ 			double averagePriceRoundTrip = fare.getBaseFare();
  								
      		if (numberOfAccountedPricesRoundTrip == 50000)
 				numberOfAccountedPricesRoundTrip = 30000;
      		
      		
-			double newAveragePriceRoundTrip = ((numberOfAccountedPricesRoundTrip*averagePriceRoundTrip)+(double)price)/(double)(numberOfAccountedPricesRoundTrip+1);
+			double newAveragePriceRoundTrip = ((numberOfAccountedPricesRoundTrip*averagePriceRoundTrip)+(double)fare.getPrice())/(double)(numberOfAccountedPricesRoundTrip+1);
 			numberOfAccountedPricesRoundTrip++;
 			ps = conn.prepareStatement(updateRoutePrice);
-			int lastAccountedPriceRoundTrip = price;
+			int lastAccountedPriceRoundTrip = fare.getPrice();
 			ps.setInt(1, numberOfAccountedPricesRoundTrip);
 			ps.setInt(2, lastAccountedPriceRoundTrip);
 			ps.setDouble(3, newAveragePriceRoundTrip);
-			ps.setString(4, origin.getIataFaa().toUpperCase());
-			ps.setString(5, destination.getIataFaa().toUpperCase());
+			ps.setString(4, fare.getOrigin().getIataFaa().toUpperCase());
+			ps.setString(5, fare.getDestination().getIataFaa().toUpperCase());
 			
 			ps.executeUpdate();
 		}
 		
-	public void insertDatabaseFare(AirportStructure origin, AirportStructure destination, int price) throws SQLException
+	public void insertDatabaseFare(RoundTripFare fare) throws SQLException
 		{
 			PreparedStatement ps = null;
 			
 				ps = conn.prepareStatement(insertRoutePrice);
-				ps.setString(1, origin.getIataFaa().toUpperCase());
-				ps.setString(2, destination.getIataFaa().toUpperCase());
-				ps.setInt(3, price);
-				ps.setDouble(4, price);	
+				ps.setString(1, fare.getOrigin().getIataFaa().toUpperCase());
+				ps.setString(2, fare.getDestination().getIataFaa().toUpperCase());
+				ps.setInt(3, fare.getPrice());
+				ps.setDouble(4, fare.getPrice());	
 				
 				ps.executeUpdate();
 		}

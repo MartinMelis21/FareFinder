@@ -84,6 +84,12 @@
 		    <version>1.5.0-b01</version>
 		</dependency>
 		
+		<dependency>
+		  <groupId>net.bican</groupId>
+		  <artifactId>jwordpress</artifactId>
+		  <version>0.6.4</version>
+		</dependency>
+		
 	</dependencies>
 	<profiles>
 		<profile>

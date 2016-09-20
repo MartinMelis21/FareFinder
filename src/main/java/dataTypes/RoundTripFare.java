@@ -12,10 +12,11 @@ public class RoundTripFare {
 	private double baseFare;
 	private double dealRatio;
 	private double saleRatio;
+	private boolean isNew;
+	private Integer numberOfAccountedPricesRoundTrip;
 	
 	
-	
-	public RoundTripFare(AirportStructure origin, AirportStructure destination, int price, Date outbound, Date inbound, double baseFare) {
+	public RoundTripFare(AirportStructure origin, AirportStructure destination, int price, Date outbound, Date inbound, double baseFare, int numberOfAccountedFares) {
 		super();
 		this.origin = origin;
 		this.destination = destination;
@@ -26,6 +27,8 @@ public class RoundTripFare {
 		this.dealRatio = price/getDistance();
 		this.baseFare = baseFare;
 		this.saleRatio = (1-(price/baseFare))*100;
+		this.isNew = false;
+		this.numberOfAccountedPricesRoundTrip = numberOfAccountedFares;
 	}
 		
 	private double getDistance () {
@@ -40,6 +43,21 @@ public class RoundTripFare {
 	}
 	
 	
+	public Integer getNumberOfAccountedPricesRoundTrip() {
+		return numberOfAccountedPricesRoundTrip;
+	}
+
+	public void setNumberOfAccountedPricesRoundTrip(Integer numberOfAccountedPricesRoundTrip) {
+		this.numberOfAccountedPricesRoundTrip = numberOfAccountedPricesRoundTrip;
+	}
+
+	public void setIsNew() {
+		this.isNew = true;
+	}
+	
+	public boolean getIsNew() {
+		return this.isNew;
+	}
 	
 	public double getSaleRatio() {
 		return saleRatio;

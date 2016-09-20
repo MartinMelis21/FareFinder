@@ -28,8 +28,15 @@ import javax.sql.DataSource;
 
 import com.martinmelis.web.farefinder.dao.*;
 import com.martinmelis.web.farefinder.farescraper.FareScraper;
+import com.martinmelis.web.farefinder.publisher.Publisher;
 import com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+
+import net.bican.wordpress.exceptions.FileUploadException;
+import net.bican.wordpress.exceptions.InsufficientRightsException;
+import net.bican.wordpress.exceptions.InvalidArgumentsException;
+import net.bican.wordpress.exceptions.ObjectNotFoundException;
+import redstone.xmlrpc.XmlRpcFault;
 
 /**
  * Servlet implementation class FareFinder
@@ -57,8 +64,7 @@ public class FareFinder extends HttpServlet{
 	    response.setContentType("text/plain");
 	    PrintWriter out = response.getWriter();
 	    String fares = "";
-	    
-	    
+	      
 	    
 	    try(BufferedReader br = new BufferedReader(new FileReader("fares.txt"))) {
 	        StringBuilder sb = new StringBuilder();
@@ -72,7 +78,6 @@ public class FareFinder extends HttpServlet{
 	       fares = sb.toString();
 	    }    
 	    out.println(fares);
-	    
 	  }
 	  
 	  	

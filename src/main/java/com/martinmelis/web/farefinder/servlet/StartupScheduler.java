@@ -1,6 +1,7 @@
 package com.martinmelis.web.farefinder.servlet;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Date;
 
 import javax.servlet.ServletException;
@@ -15,7 +16,13 @@ import org.quartz.SchedulerException;
 import org.quartz.SimpleTrigger;
 import org.quartz.impl.StdSchedulerFactory;
 
+import com.martinmelis.web.farefinder.publisher.Publisher;
 import com.martinmelis.web.farefinder.scheduling.SchedulerJob;
+
+import net.bican.wordpress.exceptions.InsufficientRightsException;
+import net.bican.wordpress.exceptions.InvalidArgumentsException;
+import net.bican.wordpress.exceptions.ObjectNotFoundException;
+import redstone.xmlrpc.XmlRpcFault;
 
 /**
  * Servlet implementation class StartupScheduler
@@ -47,7 +54,6 @@ public class StartupScheduler extends HttpServlet {
 	}
 	
 	 public void init() {
-		   
 		 
 		    JobDetail job = new JobDetail();
 	    	job.setName("farescraping");
@@ -80,7 +86,6 @@ public class StartupScheduler extends HttpServlet {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
 		  
 		  
 		  }

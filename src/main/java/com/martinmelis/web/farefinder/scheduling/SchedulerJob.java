@@ -53,6 +53,7 @@ public class SchedulerJob implements org.quartz.StatefulJob {
 			  	origins.add("PT");
 			  	origins.add("ES");
 			  	origins.add("UK");
+			  	origins.add("FR");
 			  	
 			  		
 			//-----------------connect to Database-----------------
@@ -90,7 +91,7 @@ public class SchedulerJob implements org.quartz.StatefulJob {
 	    
 		try {
 			fareScraper = new FareScraper();
-			fares = fareScraper.getFares(origins,conn);
+			fares = fareScraper.getFaresString(origins,conn);
 	        	        
 	        File faresFile = new File("fares.txt");
 	        FileWriter faresWriter = new FileWriter(faresFile, false); // true to append	                             

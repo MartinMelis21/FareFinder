@@ -780,9 +780,9 @@ public class FareScraper {
 			ps.setString(4, fare.getOrigin().getIataFaa().toUpperCase());
 			ps.setString(5, fare.getDestination().getIataFaa().toUpperCase());
 			if(isPublished == false)
-				ps.setInt(5,0);
+				ps.setInt(6,0);
 			else
-				ps.setInt(5,1);
+				ps.setInt(6,1);
 			
 			ps.executeUpdate();
 		}

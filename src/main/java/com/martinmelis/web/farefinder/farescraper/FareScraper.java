@@ -777,12 +777,12 @@ public class FareScraper {
 			ps.setInt(1, numberOfAccountedPricesRoundTrip);
 			ps.setInt(2, lastAccountedPriceRoundTrip);
 			ps.setDouble(3, newAveragePriceRoundTrip);
-			ps.setString(4, fare.getOrigin().getIataFaa().toUpperCase());
-			ps.setString(5, fare.getDestination().getIataFaa().toUpperCase());
+			ps.setString(5, fare.getOrigin().getIataFaa().toUpperCase());
+			ps.setString(6, fare.getDestination().getIataFaa().toUpperCase());
 			if(isPublished == false)
-				ps.setInt(6,0);
+				ps.setInt(4,0);
 			else
-				ps.setInt(6,1);
+				ps.setInt(4,1);
 			
 			ps.executeUpdate();
 		}

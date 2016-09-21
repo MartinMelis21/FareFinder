@@ -11,6 +11,7 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -66,8 +67,8 @@ public class FareScraper {
 	final String addAirportSQL = 			"INSERT INTO Airports (iataFaa, airportName, airportCity, airportCountry, latitude, longtitude, altitude, icao) values (?, ?, ?, ?, ?, ?, ?, ?)";
 	final String updateSSIDSQL = 			"UPDATE Airports SET SkyScannerID = ? WHERE iataFaa = ?";
 	final String checkFareExistance = 		"SELECT numberOfAccountedPricesRoundTrip, averagePriceRoundTrip FROM Fares WHERE origin = (SELECT airportID FROM Airports WHERE iataFaa = ?) AND destination = (SELECT airportID FROM Airports WHERE iataFaa = ?)";
-	final String updateRoutePrice = 		"UPDATE Fares SET numberOfAccountedPricesRoundTrip = ?,lastAccountedPriceRoundTrip = ?,lastAccountedPriceTimeRoundTrip = NOW(),averagePriceRoundTrip = ? WHERE origin=(SELECT airportID FROM Airports WHERE iataFaa = ?) AND destination = (SELECT airportID FROM Airports WHERE iataFaa = ?)";
-	final String insertRoutePrice = 		"INSERT INTO Fares (origin,destination,lastAccountedPriceTimeRoundTrip,lastAccountedPriceRoundTrip,numberOfAccountedPricesRoundTrip,averagePriceRoundTrip)VALUES ((SELECT airportID FROM Airports WHERE iataFaa = ?),(SELECT airportID FROM Airports WHERE iataFaa = ?),NOW(),?,1,?);";
+	final String updateRoutePrice = 		"UPDATE Fares SET numberOfAccountedPricesRoundTrip = ?,lastAccountedPriceRoundTrip = ?,lastAccountedPriceTimeRoundTrip = NOW(),averagePriceRoundTrip = ?,isPublished = ? WHERE origin=(SELECT airportID FROM Airports WHERE iataFaa = ?) AND destination = (SELECT airportID FROM Airports WHERE iataFaa = ?)";
+	final String insertRoutePrice = 		"INSERT INTO Fares (origin,destination,lastAccountedPriceTimeRoundTrip,lastAccountedPriceRoundTrip,numberOfAccountedPricesRoundTrip,averagePriceRoundTrip,isPublished)VALUES ((SELECT airportID FROM Airports WHERE iataFaa = ?),(SELECT airportID FROM Airports WHERE iataFaa = ?),NOW(),?,1,?,?);";
 	final String getSSIDMapping =			"SELECT airportID,SkyScannerID FROM Airports";
 	final String getIataMapping =			"SELECT airportID,iataFaa FROM Airports";
 	
@@ -217,9 +218,10 @@ public class FareScraper {
 	public String getFaresString (ArrayList <String> countryList, Connection conn) throws Exception
 	{
 		ArrayList<RoundTripFare> results = getFares(countryList,conn);
-		Date date= new Date();
-		Timestamp stamp = new Timestamp(date.getTime());
-		String faresDescription = "Last Fares update \t\t" + stamp;
+		
+		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd.MM.yyyy");
+		Calendar cal = Calendar.getInstance();		
+		String faresDescription = "Last Fares update \t\t" + dateFormat.format(cal.getTime()) +"\n";
 		
 		for (RoundTripFare fare : results)
 		{
@@ -247,7 +249,7 @@ public class FareScraper {
 		    new Comparator<RoundTripFare>() {
 		        @Override
 		        public int compare(RoundTripFare e1, RoundTripFare e2) {
-		            return ((Double)e2.getDealRatio()).compareTo(((Double)e1.getDealRatio()));
+		            return ((Double)e2.getSaleRatio()).compareTo(((Double)e1.getSaleRatio()));
 		        }
 		    }
 		);
@@ -278,23 +280,32 @@ public class FareScraper {
 	     		{
 	     		
 	     			RoundTripFare fare = filteredFares.get(temp);
-	     			
-	     			if (fare.getIsNew())
-	     				insertDatabaseFare (fare);
-	     			else
-	     				updateDatabaseFare(fare);
-	     		
+	     			   		
 	     			if (fare.getOrigin().getZone() == fare.getDestination().getZone()  || fare.getPrice() > 300 || fare.getSaleRatio()<30)
-	     				continue;
-	     			
-	     			resultFares.add(fare);
-	     			
-	     			//TODO mail notification
-	     			//if (zoneOrigin != zoneDestination && dealRatio<=0.015)
-	     			//	mailSender.sendMail("martin.melis21@gmail.com", fare);
+	     			{
+	     				if (fare.getIsNew())
+		     				insertDatabaseFare (fare,false);
+		     			else
+		     				updateDatabaseFare(fare,false);
+	     			}
+	     			else
+	     			{
+	     				if (fare.getIsNew())
+		     				insertDatabaseFare (fare,true);
+		     			else
+		     				updateDatabaseFare(fare,true);
+	     				
+	     				resultFares.add(fare);
+		     			
+		     			//TODO mail notification
+		     			//if (zoneOrigin != zoneDestination && dealRatio<=0.015)
+		     			//	mailSender.sendMail("martin.melis21@gmail.com", fare);
+	     			}
 	     			
 	     		}
 	         }		
+		
+		//TODO check validity of all fares, but primarily those that are marked as published but are not in result fares
 		
 		return sortFares(resultFares);
 	}
@@ -749,7 +760,7 @@ public class FareScraper {
  			return fare;
 		}	
 		
-	public void updateDatabaseFare(RoundTripFare fare) throws SQLException
+	public void updateDatabaseFare(RoundTripFare fare, boolean isPublished) throws SQLException
 		{
  			PreparedStatement ps = null;
  			Integer numberOfAccountedPricesRoundTrip = fare.getNumberOfAccountedPricesRoundTrip();
@@ -768,11 +779,15 @@ public class FareScraper {
 			ps.setDouble(3, newAveragePriceRoundTrip);
 			ps.setString(4, fare.getOrigin().getIataFaa().toUpperCase());
 			ps.setString(5, fare.getDestination().getIataFaa().toUpperCase());
+			if(isPublished == false)
+				ps.setInt(5,0);
+			else
+				ps.setInt(5,1);
 			
 			ps.executeUpdate();
 		}
 		
-	public void insertDatabaseFare(RoundTripFare fare) throws SQLException
+	public void insertDatabaseFare(RoundTripFare fare, boolean isPublished) throws SQLException
 		{
 			PreparedStatement ps = null;
 			
@@ -780,7 +795,12 @@ public class FareScraper {
 				ps.setString(1, fare.getOrigin().getIataFaa().toUpperCase());
 				ps.setString(2, fare.getDestination().getIataFaa().toUpperCase());
 				ps.setInt(3, fare.getPrice());
-				ps.setDouble(4, fare.getPrice());	
+				ps.setDouble(4, fare.getPrice());
+				
+				if(isPublished == false)
+					ps.setInt(5,0);
+				else
+					ps.setInt(5,1);
 				
 				ps.executeUpdate();
 		}

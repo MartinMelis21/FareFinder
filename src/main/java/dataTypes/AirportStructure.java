@@ -2,6 +2,7 @@ package dataTypes;
 
 public class AirportStructure {
 
+	private Integer airportID =		null;
 	private String airportName = 	null;
 	private String cityName = 		null;
 	private String country = 		null;
@@ -13,6 +14,16 @@ public class AirportStructure {
 	private Integer skyScannerID =	null;
 	private Integer zone =	null;
 	
+	
+	
+	public int getAirportID() {
+		return airportID;
+	}
+
+	public void setAirportID(int airportID) {
+		this.airportID = airportID;
+	}
+
 	public String getIataFaa() {
 		return iataFaa;
 	}
@@ -94,7 +105,7 @@ public class AirportStructure {
 	}
 
 	public AirportStructure(String airportName, String cityName, String country, Double latitude, Double longtitude,
-			Integer skyScannerID, String iataFaa, Double altitude, String icao, Integer zone) {
+			Integer skyScannerID, String iataFaa, Double altitude, String icao, Integer zone, Integer airportID) {
 		super();
 		this.airportName = airportName;
 		this.cityName = cityName;
@@ -106,6 +117,7 @@ public class AirportStructure {
 		this.iataFaa = iataFaa;
 		this.altitude = altitude;
 		this.zone = zone;
+		this.airportID = airportID;
 	}
 
 }

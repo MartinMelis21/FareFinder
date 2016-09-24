@@ -52,6 +52,7 @@ import java.io.*;
 public class FareScraper {
 	
 	//-----global variables-----
+	public final static long MILLIS_PER_DAY = 24 * 60 * 60 * 1000L;
 	
 	BufferedReader in;
 	private final String USER_AGENT = "Mozilla/5.0";
@@ -63,7 +64,7 @@ public class FareScraper {
 	final String getAirportOnIDSQL = 		"SELECT a.airportName,a.airportCity,a.airportCountry,a.latitude,a.longtitude,a.iataFaa,a.altitude,a.icao,z.id, a.airportID, a.SkyScannerID from Airports a left join Countries c on a.airportCountry=c.countryName left join Zones z on c.zone=z.id WHERE airportID = ?";
 	final String getAirportOnSSIDSQL = 		"SELECT a.airportName,a.airportCity,a.airportCountry,a.latitude,a.longtitude,a.iataFaa,a.altitude,a.icao,z.id, a.airportID, a.SkyScannerID from Airports a left join Countries c on a.airportCountry=c.countryName left join Zones z on c.zone=z.id WHERE SkyScannerID = ?";
 	final String getAirportOnIataFaaSQL = 	"SELECT a.airportName,a.airportCity,a.airportCountry,a.latitude,a.longtitude,a.iataFaa,a.altitude,a.icao,z.id, a.airportID, a.SkyScannerID from Airports a left join Countries c on a.airportCountry=c.countryName left join Zones z on c.zone=z.id WHERE a.iataFaa = ?";
-	final String getFareSQL = 				"SELECT o.airportName,o.airportCity,o.airportCountry,o.latitude,o.longtitude,o.iataFaa,o.altitude,o.icao,oc.zone,d.airportName,d.airportCity,d.airportCountry,d.latitude,d.longtitude,d.iataFaa,d.altitude,d.icao,dc.zone,f.lastAccountedPriceRoundTrip, f.numberOfAccountedPricesRoundTrip, f.averagePriceRoundTrip, o.SkyScannerID, d.SkyScannerID from Fares f, Airports o, Airports d, Countries oc, Countries dc where f.origin = ? and f.destination = ? and f.origin=o.airportID and f.destination=d.airportID and oc.countryName=o.airportCountry and dc.countryName=d.airportCountry";
+	final String getFareSQL = 				"SELECT o.airportName,o.airportCity,o.airportCountry,o.latitude,o.longtitude,o.iataFaa,o.altitude,o.icao,oc.zone,d.airportName,d.airportCity,d.airportCountry,d.latitude,d.longtitude,d.iataFaa,d.altitude,d.icao,dc.zone,f.lastAccountedPriceRoundTrip, f.numberOfAccountedPricesRoundTrip, f.averagePriceRoundTrip, o.SkyScannerID, d.SkyScannerID,  if(f.lastFareNotification = '0000-00-00', null, f.lastFareNotification) as lastFareNotification from Fares f, Airports o, Airports d, Countries oc, Countries dc where f.origin = ? and f.destination = ? and f.origin=o.airportID and f.destination=d.airportID and oc.countryName=o.airportCountry and dc.countryName=d.airportCountry";
 	final String addAirportSQL = 			"INSERT INTO Airports (iataFaa, airportName, airportCity, airportCountry, latitude, longtitude, altitude, icao) values (?, ?, ?, ?, ?, ?, ?, ?)";
 	final String updateSSIDSQL = 			"UPDATE Airports SET SkyScannerID = ? WHERE iataFaa = ?";
 	final String checkFareExistance = 		"SELECT numberOfAccountedPricesRoundTrip, averagePriceRoundTrip FROM Fares WHERE origin = (SELECT airportID FROM Airports WHERE iataFaa = ?) AND destination = (SELECT airportID FROM Airports WHERE iataFaa = ?)";
@@ -71,6 +72,7 @@ public class FareScraper {
 	final String insertRoutePrice = 		"INSERT INTO Fares (origin,destination,lastAccountedPriceTimeRoundTrip,lastAccountedPriceRoundTrip,numberOfAccountedPricesRoundTrip,averagePriceRoundTrip,isPublished)VALUES ((SELECT airportID FROM Airports WHERE iataFaa = ?),(SELECT airportID FROM Airports WHERE iataFaa = ?),NOW(),?,1,?,?);";
 	final String getSSIDMapping =			"SELECT airportID,SkyScannerID FROM Airports";
 	final String getIataMapping =			"SELECT airportID,iataFaa FROM Airports";
+	final String updateFarePublishDate =	"UPDATE Fares SET lastFareNotification = NOW() WHERE origin = ? and destination = ? ";
 	
 	private Connection conn = null;
 	private MailSender mailSender = null;
@@ -170,7 +172,7 @@ public class FareScraper {
 		in.close();	
 	
 	if (name != null && latitude != null && longtitude != null)
-		return new AirportStructure(name, city, country, latitude, longtitude, null, iataCode, altitude, ICAO, zone);
+		return new AirportStructure(name, city, country, latitude, longtitude, null, iataCode, altitude, ICAO, zone,null);
 	else
 		return null;
 	}
@@ -296,10 +298,28 @@ public class FareScraper {
 		     				updateDatabaseFare(fare,true);
 	     				
 	     				resultFares.add(fare);
+	     				
+	     				
+	     				//---------------notification------------
+	     				
+	     				
+	     				//I check lastFareNotification
+	     				Date lastAccountedDate = fare.getLastFareNotification();
+	     				DateTime lastFareNotification = new DateTime (lastAccountedDate);
+	     				//If it is more than a day or is better than 20% of previously announced
+	     				DateTime yesterday = DateTime.now().minusDays(1);
+	     				
+	     				if (lastAccountedDate == null || (lastFareNotification.getMillis() < yesterday.getMillis()))
+	     				{	//TODO or 20% better
+	     					mailSender.sendMail("martin.melis21@gmail.com", fare);//TODO send to all mail reciepts
+	     					
+	     					//update notification time
+	     					updateFarePublishDate(fare);
+	     				}
 		     			
-		     			//TODO mail notification
-		     			//if (zoneOrigin != zoneDestination && dealRatio<=0.015)
-		     			//	mailSender.sendMail("martin.melis21@gmail.com", fare);
+		     			
+		     			//--------------------------------------
+		     			
 	     			}
 	     			
 	     		}
@@ -523,6 +543,8 @@ public class FareScraper {
 	     			resultSet.close();
 	 			}
 			
+			airport.setAirportID(airportID);
+			
 			return airportID;
 	}
 		
@@ -695,6 +717,7 @@ public class FareScraper {
  			
  			Integer originSSID =			 	null;
  			Integer destinationSSID =		 	null;
+ 			Date lastFareNotification=			null;
  			
  			// In case we know such a fare and thus know all airports
  			if (resultSet.next()) {  		     	
@@ -722,17 +745,18 @@ public class FareScraper {
      			averageAccountedPrice =			resultSet.getDouble(21); 
      			
      			originSSID =					resultSet.getInt(22);
-     			destinationSSID =				resultSet.getInt(23);
+     			destinationSSID =				resultSet.getInt(23);     			
+     			lastFareNotification =			resultSet.getDate(24);
+     			
      			
      			resultSet.close();
      			
-     			//In this case I dont do any additional SQL calls
-     			
+     			//In this case I dont do any additional SQL calls     			
      			if (locationDictionary.containsKey(originID))
      				origin = locationDictionary.get(originID);
      			else
      			{
-     				origin = new AirportStructure(originAirportName,originCityName,originCountry,originLatitude,originLongtitude,originSSID,originIataFaa, originAltitude, originIcao,originZone);
+     				origin = new AirportStructure(originAirportName,originCityName,originCountry,originLatitude,originLongtitude,originSSID,originIataFaa, originAltitude, originIcao,originZone,originID);
      	 			locationDictionary.put(originID, origin);
      			}
      			
@@ -740,11 +764,11 @@ public class FareScraper {
      				destination = locationDictionary.get(destinationID);
      			else
      			{
-     				destination = new AirportStructure(destinationAirportName,destinationCityName,destinationCountry,destinationLatitude,destinationLongtitude,destinationSSID,destinationIataFaa, destinationAltitude, destinationIcao,destinationZone);
+     				destination = new AirportStructure(destinationAirportName,destinationCityName,destinationCountry,destinationLatitude,destinationLongtitude,destinationSSID,destinationIataFaa, destinationAltitude, destinationIcao,destinationZone,destinationID);
      	 			locationDictionary.put(destinationID, destination);
      			}
      			
-     			fare = new RoundTripFare (origin, destination, price, outbound, inbound, averageAccountedPrice,numberOfPricesRoundTrip); 
+     			fare = new RoundTripFare (origin, destination, price, outbound, inbound, averageAccountedPrice,numberOfPricesRoundTrip,lastFareNotification); 
      			     			
  			}
  			// In case Fare is not accounted, either we know airports, but dont know fare, or we dont know one airport, or we dont know any of airports
@@ -754,7 +778,7 @@ public class FareScraper {
  				origin = getAirportInfo (originID); 				
  				destination = getAirportInfo (destinationID);		
  				
- 				fare = new RoundTripFare (origin, destination, price, outbound, inbound, averageAccountedPrice,0); 
+ 				fare = new RoundTripFare (origin, destination, price, outbound, inbound, averageAccountedPrice,0,null); 
      			fare.setIsNew();
  			}			
  			return fare;
@@ -786,6 +810,18 @@ public class FareScraper {
 			
 			ps.executeUpdate();
 		}
+	
+	public void updateFarePublishDate (RoundTripFare fare) throws SQLException {
+			
+		//this need to be done as separate SQL call, because when prices are updated, we still dont know if we publish
+		
+		PreparedStatement ps = null;
+		ps = conn.prepareStatement(updateFarePublishDate);
+		ps.setInt(1, fare.getOrigin().getAirportID());
+		ps.setInt(2, fare.getDestination().getAirportID());
+		
+		ps.executeUpdate();
+	}
 		
 	public void insertDatabaseFare(RoundTripFare fare, boolean isPublished) throws SQLException
 		{
@@ -829,6 +865,7 @@ public class FareScraper {
  			String iataFaa=			null;
  			Integer zone = 			null;
  			Integer SSID = 			null;
+ 			Integer id =			null;
  			
  			if (resultSet.next()) {  		     	
      			airportName = 	resultSet.getString(1);
@@ -840,12 +877,13 @@ public class FareScraper {
      			altitude=		resultSet.getDouble(7); 
      			icao=			resultSet.getString(8); 
      			zone =			resultSet.getInt(9); 
-     			SSID = 			resultSet.getInt(11); 
+     			id =			resultSet.getInt(10);
+     			SSID = 			resultSet.getInt(11);  
      			
      			resultSet.close();
  			}
  			
- 			AirportStructure airportStructure = new AirportStructure(airportName,cityName,country,latitude,longtitude,SSID,iataFaa, altitude, icao,zone);
+ 			AirportStructure airportStructure = new AirportStructure(airportName,cityName,country,latitude,longtitude,SSID,iataFaa, altitude, icao,zone,id);
  			locationDictionary.put(airportID, airportStructure);
  			
  			return airportStructure;

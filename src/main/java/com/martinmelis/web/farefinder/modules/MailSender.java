@@ -9,12 +9,14 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import dataTypes.RoundTripFare;
+
 
 public class MailSender {
 
 	
 	
-	public void sendMail(String reciept, String fare) {
+	public void sendMail(String reciept, RoundTripFare fare) {
 
 		final String username = "farenotification@gmail.com";
 		final String password = "lokojoho486";
@@ -35,15 +37,18 @@ public class MailSender {
 
 		try {
 
+			String messageString = "New fare accounted:\n" + fare.getOrigin().getCityName() + "\tto\t" + fare.getDestination().getCityName() + "\n"
+								+ "Price:\t" + fare.getPrice() + "\n"
+								+ "Sale:\t" + fare.getSaleRatio();
+			
 			Message message = new MimeMessage(session);
 			message.setFrom(new InternetAddress("notification@farefinder.com"));
 			message.setRecipients(Message.RecipientType.TO,
 				InternetAddress.parse(reciept));
 			message.setSubject("Farefinder - FARE NOTIFICATION!");
-			message.setText(fare);
+			message.setText(messageString);
 
 			Transport.send(message);
-			System.out.println("Done");
 
 		} catch (MessagingException e) {
 			throw new RuntimeException(e);

@@ -8,6 +8,7 @@ public class RoundTripFare {
 	private AirportStructure destination = null;
 	private Date outboundLeg = null;
 	private Date inboundLeg = null;
+	private Date lastFareNotification = null;
 	private int price;
 	private double baseFare;
 	private double dealRatio;
@@ -16,7 +17,7 @@ public class RoundTripFare {
 	private Integer numberOfAccountedPricesRoundTrip;
 	
 	
-	public RoundTripFare(AirportStructure origin, AirportStructure destination, int price, Date outbound, Date inbound, double baseFare, int numberOfAccountedFares) {
+	public RoundTripFare(AirportStructure origin, AirportStructure destination, int price, Date outbound, Date inbound, double baseFare, int numberOfAccountedFares, Date lastFareNotification) {
 		super();
 		this.origin = origin;
 		this.destination = destination;
@@ -29,6 +30,8 @@ public class RoundTripFare {
 		this.saleRatio = (1-(price/baseFare))*100;
 		this.isNew = false;
 		this.numberOfAccountedPricesRoundTrip = numberOfAccountedFares;
+		this.lastFareNotification = lastFareNotification;
+		
 	}
 		
 	private double getDistance () {
@@ -43,6 +46,14 @@ public class RoundTripFare {
 	}
 	
 	
+	public Date getLastFareNotification() {
+		return lastFareNotification;
+	}
+
+	public void setLastFareNotification(Date lastFareNotification) {
+		this.lastFareNotification = lastFareNotification;
+	}
+
 	public Integer getNumberOfAccountedPricesRoundTrip() {
 		return numberOfAccountedPricesRoundTrip;
 	}

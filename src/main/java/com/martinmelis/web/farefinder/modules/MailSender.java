@@ -39,7 +39,8 @@ public class MailSender {
 
 			String messageString = "New fare accounted:\n" + fare.getOrigin().getCityName() + "\tto\t" + fare.getDestination().getCityName() + "\n"
 								+ "Price:\t" + fare.getPrice() + "\n"
-								+ "Sale:\t" + fare.getSaleRatio();
+								+ "Sale:\t" + fare.getSaleRatio() + "\n"
+								+ "Booking URL:\t" + fare.getBookingURL() + "\n";
 			
 			Message message = new MimeMessage(session);
 			message.setFrom(new InternetAddress("notification@farefinder.com"));

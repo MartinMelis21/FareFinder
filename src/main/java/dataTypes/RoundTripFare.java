@@ -14,6 +14,7 @@ public class RoundTripFare {
 	private double dealRatio;
 	private double saleRatio;
 	private boolean isNew;
+	private String bookingURL = null;
 	private Integer numberOfAccountedPricesRoundTrip;
 	
 	
@@ -46,6 +47,15 @@ public class RoundTripFare {
 	}
 	
 	
+	
+	public String getBookingURL() {
+		return bookingURL;
+	}
+
+	public void setBookingURL(String bookingURL) {
+		this.bookingURL = bookingURL;
+	}
+
 	public Date getLastFareNotification() {
 		return lastFareNotification;
 	}

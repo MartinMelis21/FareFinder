@@ -236,6 +236,7 @@ public class FareScraper {
  			faresDescription += ("Average price on this route : " + fare.getBaseFare() + "\n");
  			faresDescription += (("Sale : " + fare.getSaleRatio()) + "\n");
  			faresDescription += (("DealRatio : " + fare.getDealRatio()) + "\n"+ "\n");
+ 			faresDescription += (("Booking URL : " + fare.getBookingURL()) + "\n"+ "\n");
  			finalResponse.append(faresDescription);
 		}
 		
@@ -282,6 +283,9 @@ public class FareScraper {
 	     		{
 	     		
 	     			RoundTripFare fare = filteredFares.get(temp);
+	     			
+	     			//TODO I also need to set all fares, which are not in current Deals list to be set to isPublished = 0
+	     			
 	     			   		
 	     			if (fare.getOrigin().getZone() == fare.getDestination().getZone()  || fare.getPrice() > 300 || fare.getSaleRatio()<30)
 	     			{
@@ -368,6 +372,8 @@ public class FareScraper {
      			
      			int originSSID =		Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("OriginId").item(0).getTextContent());
      			int destinationSSID = 	Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DestinationId").item(0).getTextContent());
+     			//TODO need to get SkyScanner booking URL
+     			
      			
      			if ((originID = skyScannerIDMapping.get(originSSID)) == null)
      				// I update SSID to database
@@ -377,6 +383,7 @@ public class FareScraper {
      				destinationID = updateSSID(locationList, destinationSSID, conn);     			
      			
      			RoundTripFare fare = 	getRoundTripFare (originID,destinationID,price,outboundDate,inboundDate);
+     			fare.setBookingURL("SkyScanner");
      			fares.add(fare);
      			
 
@@ -425,6 +432,7 @@ public class FareScraper {
      			int price = Integer.parseInt(eElement.getElementsByTagName("price").item(0).getTextContent());
      			String originIata = eElement.getElementsByTagName("flyFrom").item(0).getTextContent();
      			String destinationIata = eElement.getElementsByTagName("flyTo").item(0).getTextContent();
+     			String bookingToken = eElement.getElementsByTagName("booking_token").item(0).getTextContent();
      			//TODO problem with time conversion from format
      			DateFormat df = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss", Locale.ENGLISH);     			
      			Date outboundDate = 	df.parse(((Element) eElement.getElementsByTagName("route").item(0)).getElementsByTagName("aTimeUTC").item(0).getTextContent());
@@ -444,6 +452,7 @@ public class FareScraper {
      			}
      			
      			RoundTripFare fare = getRoundTripFare (originID, destinationID, price,outboundDate,inboundDate);
+     			fare.setBookingURL("https://www.kiwi.com/us/booking?token=" + bookingToken);
      			fares.add(fare);
      			
      			System.out.println("Outbound Leg\n\tFrom : " + fare.getOrigin().getCityName()  + " to " + fare.getDestination().getCityName() );

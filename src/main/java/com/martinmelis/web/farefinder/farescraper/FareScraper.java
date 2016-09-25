@@ -395,6 +395,7 @@ public class FareScraper {
      			System.out.println("Average price on this route : " + fare.getBaseFare());
      			System.out.println("Sale : " + fare.getSaleRatio());
      			System.out.println("DealRatio : " + fare.getDealRatio());
+     			System.out.println("Booking URL : " + fare.getBookingURL());
      			System.out.println ();
      		}
          }
@@ -463,6 +464,7 @@ public class FareScraper {
      			System.out.println("Average price on this route : " + fare.getBaseFare());
      			System.out.println("Sale : " + fare.getSaleRatio());
      			System.out.println("DealRatio : " + fare.getDealRatio());
+     			System.out.println("Booking URL : " + fare.getBookingURL());
      			System.out.println ();
      		}
          }

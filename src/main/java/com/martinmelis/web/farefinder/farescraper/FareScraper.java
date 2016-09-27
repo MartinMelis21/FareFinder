@@ -227,10 +227,12 @@ public class FareScraper {
 		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd.MM.yyyy");
 		Calendar cal = Calendar.getInstance();		
 		String faresDescription = "Last Fares update \t\t" + dateFormat.format(cal.getTime()) +"\n";
+		//TODO Temporarily we delete all published posts, this will be changed
+		portalPublisher.deleteAllFaresOnPortal();
 		
 		for (RoundTripFare fare : results)
 		{
- 			
+			portalPublisher.publishFareToPortal(fare);
  			faresDescription += (("Outbound Leg\n\tFrom : " + fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName() ) + "\n");
  			faresDescription += ("\tDate : " + fare.getOutboundLeg().toString() + "\n");
  			faresDescription += (("Inbound Leg\n\tFrom : " + fare.getDestination().getCityName()  + " to " + fare.getOrigin().getCityName() ) + "\n");
@@ -269,9 +271,7 @@ public class FareScraper {
 		ArrayList<RoundTripFare> filteredFares = new ArrayList<RoundTripFare> ();
 		ArrayList<RoundTripFare> resultFares = new ArrayList<RoundTripFare> ();
 		
-		//TODO Temporarily we delete all published posts, this will be changed
-		portalPublisher.deleteAllFaresOnPortal();
-		
+				
 		for (String origin: countryList)
 		{
 			ArrayList<RoundTripFare> 	faresSS =		 	getFareListSS (origin);
@@ -289,10 +289,7 @@ public class FareScraper {
 	     		{
 	     		
 	     			RoundTripFare fare = filteredFares.get(temp);
-	     			
-	     			//TODO publishing needs to be redone
-	     			portalPublisher.publishFareToPortal(fare);
-	     			
+	     			     			
 	     			//TODO I also need to set all fares, which are not in current Deals list to be set to isPublished = 0
 	     			
 	     			   		
@@ -321,6 +318,9 @@ public class FareScraper {
 	     				DateTime lastFareNotification = new DateTime (lastAccountedDate);
 	     				//If it is more than a day or is better than 20% of previously announced
 	     				DateTime yesterday = DateTime.now().minusDays(1);
+	     				
+	     				//TODO publishing live needs to be redone
+		     			//portalPublisher.publishFareToPortal(fare);
 	     				
 	     				if (lastAccountedDate == null || (lastFareNotification.getMillis() < yesterday.getMillis()))
 	     				{	//TODO or 20% better

@@ -21,10 +21,20 @@
   	<load-on-startup>1</load-on-startup>
   	</servlet>  
   	
+  	<servlet>
+    <servlet-name>PostPublish</servlet-name>
+    <servlet-class>com.martinmelis.web.farefinder.servlet.PostPublish</servlet-class>
+  	</servlet>  
+  	
   <servlet-mapping>
     <servlet-name>FareFinder</servlet-name>
     <url-pattern>/farefinder</url-pattern>
   </servlet-mapping> 
+  
+  <servlet-mapping>
+    <servlet-name>PostPublish</servlet-name>
+    <url-pattern>/postpublish</url-pattern>
+  </servlet-mapping>
   
    <servlet-mapping>
     <servlet-name>StartupScheduler</servlet-name>

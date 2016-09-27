@@ -16,6 +16,7 @@ public class RoundTripFare {
 	private boolean isNew;
 	private String bookingURL = null;
 	private Integer numberOfAccountedPricesRoundTrip;
+	private Integer portalPostID = null;
 	
 	
 	public RoundTripFare(AirportStructure origin, AirportStructure destination, int price, Date outbound, Date inbound, double baseFare, int numberOfAccountedFares, Date lastFareNotification) {
@@ -48,6 +49,14 @@ public class RoundTripFare {
 	
 	
 	
+	public Integer getPortalPostID() {
+		return portalPostID;
+	}
+
+	public void setPortalPostID(Integer portalPostID) {
+		this.portalPostID = portalPostID;
+	}
+
 	public String getBookingURL() {
 		return bookingURL;
 	}

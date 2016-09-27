@@ -41,6 +41,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import com.martinmelis.web.farefinder.modules.MailSender;
+import com.martinmelis.web.farefinder.publisher.Publisher;
 
 import dataTypes.AirportStructure;
 import dataTypes.RoundTripFare;
@@ -76,6 +77,7 @@ public class FareScraper {
 	
 	private Connection conn = null;
 	private MailSender mailSender = null;
+	private Publisher portalPublisher = null;
 
 	//-----inicialization-----
 	
@@ -85,7 +87,8 @@ public class FareScraper {
 			DateTime dt = new DateTime(zone);
 			DateTimeFormatter fmt = DateTimeFormat.forPattern("HH:mm dd.MM.yyyy");
 			mailSender = new MailSender ();
-
+			portalPublisher = new Publisher();
+			
  		System.out.println("Last fares update:\t" + fmt.print(dt));	
 		finalResponse = new StringBuffer("Last fares update:\t" +fmt.print(dt));
 		finalResponse.append("\n\nFares:\n");
@@ -266,6 +269,9 @@ public class FareScraper {
 		ArrayList<RoundTripFare> filteredFares = new ArrayList<RoundTripFare> ();
 		ArrayList<RoundTripFare> resultFares = new ArrayList<RoundTripFare> ();
 		
+		//TODO Temporarily we delete all published posts, this will be changed
+		portalPublisher.deleteAllFaresOnPortal();
+		
 		for (String origin: countryList)
 		{
 			ArrayList<RoundTripFare> 	faresSS =		 	getFareListSS (origin);
@@ -283,6 +289,9 @@ public class FareScraper {
 	     		{
 	     		
 	     			RoundTripFare fare = filteredFares.get(temp);
+	     			
+	     			//TODO publishing needs to be redone
+	     			portalPublisher.publishFareToPortal(fare);
 	     			
 	     			//TODO I also need to set all fares, which are not in current Deals list to be set to isPublished = 0
 	     			
@@ -368,7 +377,7 @@ public class FareScraper {
      			
      			Date outboundDate = 	df.parse(outboundDateString);
      			Date inboundDate = 		df.parse(inboundDateString);
-     			
+     			 
      			
      			int originSSID =		Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("OriginId").item(0).getTextContent());
      			int destinationSSID = 	Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DestinationId").item(0).getTextContent());
@@ -429,7 +438,7 @@ public class FareScraper {
      				
      		if (nNode.getNodeType() == Node.ELEMENT_NODE) 
      		{
-     			Element eElement = (Element) nNode;     			
+     			Element eElement = (Element) nNode;
      			int price = Integer.parseInt(eElement.getElementsByTagName("price").item(0).getTextContent());
      			String originIata = eElement.getElementsByTagName("flyFrom").item(0).getTextContent();
      			String destinationIata = eElement.getElementsByTagName("flyTo").item(0).getTextContent();

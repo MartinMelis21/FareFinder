@@ -1,89 +1,240 @@
 package com.martinmelis.web.farefinder.publisher;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.Vector;
 
-import net.bican.wordpress.CustomField;
-import net.bican.wordpress.FilterPost;
-import net.bican.wordpress.MediaItem;
-import net.bican.wordpress.MediaItemUploadResult;
-import net.bican.wordpress.Post;
-import net.bican.wordpress.Term;
-import net.bican.wordpress.Wordpress;
-import net.bican.wordpress.exceptions.FileUploadException;
-import net.bican.wordpress.exceptions.InsufficientRightsException;
-import net.bican.wordpress.exceptions.InvalidArgumentsException;
-import net.bican.wordpress.exceptions.ObjectNotFoundException;
-import redstone.xmlrpc.XmlRpcFault;
+import org.apache.xmlrpc.XmlRpcException;
+import org.apache.xmlrpc.client.XmlRpcClient;
+import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+
+import dataTypes.RoundTripFare;
 
 public class Publisher {
+	
+	XmlRpcClientConfigImpl config;
+	XmlRpcClient client;
+	Vector params;
 
-	Wordpress wp = null;
-	
-	public void publishArticle (String origin, String destination, int price, Date outbound, Date inbound) throws Exception
-	{
-		wp = new Wordpress("martinmelis", "Patrolman486@1", "http://travelcheaper-martinmelis.rhcloud.com/xmlrpc.php");
-		
-		final FilterPost filter = new FilterPost();
-	    filter.setNumber(10);
-	    final List<Post> recentPosts = wp.getPosts(filter);
-	    System.out.println("Here are the ten recent posts:");
-	    for (final Post page : recentPosts) {
-	    	if (page.getPost_thumbnail() != null)
-	      System.out.println(page.getPost_id() + ":" + page.getPost_title() + "\t" + page.getPost_thumbnail().getLink());
+	public Publisher() {
+		  config = new XmlRpcClientConfigImpl();
+	      config.setBasicPassword("P(qo#zKmm6hfXAq*X8");
+	      config.setBasicUserName("martinmelis");
+	      config.setEnabledForExtensions(true);
+	      config.setEnabledForExceptions(true);
+	      try {
+			config.setServerURL(new URL("http://errorflights-martinmelis.rhcloud.com/xmlrpc.php"));
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	      client = new XmlRpcClient();
+	      client.setConfig(config);
+	      
+	      //---------setup parameters---------------
+	      
+	      params = new Vector();
+	      params.addElement(new Integer(0));
+	      params.addElement("martinmelis");
+	      params.addElement("P(qo#zKmm6hfXAq*X8");
 	}
-		
-		
-		System.out.println("Posting a a new fare...");
-		Post recentPost = new Post();
-		recentPost.setPost_title("Test to Test for 236€");
-		recentPost.setPost_content("Outbound:	18.12.2016\nInbound 27.12.2016\nBook here:");
-		
-		
-		Integer termId = null;
-		final List<Term> terms = wp.getTerms("category");
-		for (final Term t : terms) {
-	        if (t.getName().equals("TopDeals")) {
-	          termId = t.getTerm_id();
-	          break;
-	        }}
-		
-		MediaItem generic = null;
+	
+	public void publishFareToPortal(RoundTripFare fare) throws Exception {
 	    
-	    for (MediaItem m : wp.getMediaLibrary())
-	    {
-	    	if(m.getTitle().equals("generic"))
+	      
+	      //-------------------Automatic thumbnail insertion----------------------
+	      
+	      
+	      Object a[] = (Object[])client.execute("wp.getMediaLibrary", params);
+	    	Integer mediaItemIndex = 0;
+	    	Integer mediaID = null;
+	    	Boolean cityFound = false;
+	    	Boolean countryFound = false;
+	    	Boolean regionFound = false;
+	    	
+	    	//-----------First we check whether we have picture uploaded with the name of a city---------
+	    	
+	    	for (mediaItemIndex=0;mediaItemIndex<a.length;mediaItemIndex++)
 	    	{
-	    		System.out.println(m.getLink());
-	    		generic = m;
-	    		break;
+	    		if(((String)((HashMap)a[mediaItemIndex]).get("link")).contains(fare.getOrigin().getCityName().toLowerCase()))
+	    		{
+	    			cityFound = true;
+	    			String wpMediaID = (String) ((HashMap)a[mediaItemIndex]).get("attachment_id");
+	    			mediaID = Integer.parseInt(wpMediaID);
+	    			break;
+	    		}
 	    	}
-	    }
+	    	
+	    	//---------If picture is not accounted for this city we check for the country---------
+	    	
+	    	if (cityFound==false)
+	    	{
+	    		for (mediaItemIndex=0;mediaItemIndex<a.length;mediaItemIndex++)
+	        	{
+	        		if(((String)((HashMap)a[mediaItemIndex]).get("link")).contains(fare.getOrigin().getCountry().toLowerCase()))
+	        		{
+	        			countryFound = true;
+	        			String wpMediaID = (String) ((HashMap)a[mediaItemIndex]).get("attachment_id");
+		    			mediaID = Integer.parseInt(wpMediaID);
+		    			break;
+	        		}
+	        	}
+	    	}
+	    	//TODO
+	    	/*
+	    	
+	    	//---------If there is no picture for city or country we use the region----------
+	    	
+	    	if (cityFound == false && countryFound==false)
+	    	{
+	    		for (mediaItemIndex=0;mediaItemIndex<a.length;mediaItemIndex++)
+	        	{
+	        		if(((String)((HashMap)a[mediaItemIndex]).get("link")).contains(fare.getOrigin().getRegion().toLowerCase()))
+	        		{
+	        			regionFound = true;
+	        			String wpMediaID = (String) ((HashMap)a[mediaItemIndex]).get("attachment_id");
+	    				mediaID = Integer.parseInt(wpMediaID);
+	        			break;
+	        		}
+	        	}
+	    	}
+	    	*/
+	    	
+	    	//If nothing is present we use the generic one
+	    	if (cityFound == false && countryFound == false && regionFound == false)
+	    		mediaID = 7;
+	      
+	      //---------------------------------------------------------------------
+	      
+	      
+	      //------------Setting up post content---------------  
+	      
+	      
+	      Hashtable post = new Hashtable();
+	      post.put("post_title", fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());
+	      post.put("post_content", fare.getPrice() + "\n" + fare.getSaleRatio() + fare.getBookingURL());
+	      post.put("post_status", "publish");
+	      post.put("post_thumbnail", mediaID.toString());
+	      post.put("comment_status", "open");
+	      post.put("ping_status", "open");
+	      
+	      Hashtable taxonomies = new Hashtable();
+	      
+	      List<String> categories = new ArrayList<String>();
+	      
+	      /*
+	      Set<ItemTheme> themes = item.getItemThemes();
+	      for (Iterator iterator = themes.iterator(); iterator.hasNext();) {
+			ItemTheme itemTheme = (ItemTheme) iterator.next();
+			Theme theme = itemTheme.getTheme();
+			categories.add(theme.getTitle());
+	      }
+	      */
+	      
+	      categories.add("TopDeals");
+	      
+	      //custom taxonomies...
+	      List<String> tags = new ArrayList<String>();
+	      List<String> persons = new ArrayList<String>();
+	      List<String> places = new ArrayList<String>();
+	      List<String> events = new ArrayList<String>();
+	      List<String> organizations = new ArrayList<String>();
+	      List<String> source = new ArrayList<String>();		      
+	      //..add keywords to your taxonomies...
+	      
+	      /*
+	      for (Iterator iterator = themes.iterator(); iterator.hasNext();) {
+			String theme = (String) iterator.next();
+			categories.add(theme);
+	      }
+	      */
+	      	      
+	      taxonomies.put("category", categories);
+	      //taxonomies.put("post_tag", tags);
+	      //taxonomies.put("person", persons);
+	      //taxonomies.put("place", places);
+	      //taxonomies.put("event", events);
+	      //taxonomies.put("organization", organizations);
+	      
+	      
+	      /*
+	      //custom fields....	      
+	      List<Hashtable> customFieldsList = new ArrayList<Hashtable>();
+	      Hashtable customFields = new Hashtable();
+	
+    	      customFields.put("key", "url");
+	      customFields.put("value", myLink);
+	      customFieldsList.add(customFields);  
+
+	      customFields = new Hashtable();
+	      customFields.put("key", "twitter_image");
+	      customFields.put("value", linkImage);
+	      customFieldsList.add(customFields);
+	      	      
+	      post.put("custom_fields", customFieldsList);
+	      */
+	      
+	      post.put("terms_names", taxonomies);	
+	          params.addElement(post);
+    		  //log.debug("params:" + params);
+    		  String postId = (String) client.execute("wp.newPost", params);
+    	     
+	  
+}
+	
+	public void updateFareOnPortal(RoundTripFare fare) throws Exception {
+	
+		Hashtable post = new Hashtable();
+		post.put("post_title", fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());
+	    post.put("post_content","Price: "+ fare.getPrice() + "\nSale: " + fare.getSaleRatio() + "\nEUR/Km: " + fare.getDealRatio() + "\nURL: " + fare.getBookingURL());
 		
-		final Term term1 = wp.getTerm("category", termId);		
-		recentPost.setTerms(Arrays.asList(new Term[] { term1}));
-		recentPost.setPost_status("publish");
-		recentPost.setPost_thumbnail(wp.getMediaItem(generic.getAttachment_id()));
-		Integer postID = wp.newPost(recentPost);
-		
-//		final List<CustomField> customFields = new ArrayList<>();
-//	    final CustomField cf1 = new CustomField();
-//	    cf1.setKey("thumb");
-//	    cf1.setValue("https://images.trvl-media.com/media/content/expus/graphics/launch/flight1320x742.jpg");
-//	    customFields.add(cf1);
-//	    recentPost.setCustom_fields(customFields);
-	    
-	   
-		System.out.println("new post page id: " + postID);
 	}
 	
+	public void outDateFareOnPortal(RoundTripFare fare) throws Exception {
+		
+		Hashtable post = new Hashtable();
+		post.put("post_title", "[SOLD-OUT]" + fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());
+		params.addElement(fare.getPortalPostID());
+  		params.addElement(post);
+  		client.execute("wp.editPost", params);
+  	    
+	}
 	
+	//TODO change from int ID to fare.get
+	public void deleteFareOnPortal(int portalPostID) throws Exception {
+		
+		Vector paramsDelete = new Vector();
+		paramsDelete.addElement(new Integer(0));
+		paramsDelete.addElement(portalPostID);
+		paramsDelete.addElement("martinmelis");
+		paramsDelete.addElement("P(qo#zKmm6hfXAq*X8");
+		client.execute("metaWeblog.deletePost", paramsDelete);
+  	      
+	}
+	
+	public void deleteAllFaresOnPortal () throws NumberFormatException, Exception
+	{
+		Object a[] = (Object[])client.execute("metaWeblog.getRecentPosts", params);
+		 
+		int postIndex = 0;
+		ArrayList<Integer> postIDs = new ArrayList<Integer> ();
+		
+		for (postIndex=0;postIndex<a.length;postIndex++)
+    	{
+			String postID = ((String)((HashMap) a[postIndex]).get("postid"));
+			postIDs.add(Integer.parseInt(postID));
+    	}
+			
+		for (int postID: postIDs)
+			deleteFareOnPortal(postID);
+		
+	}
 	
 }

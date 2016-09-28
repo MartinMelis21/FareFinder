@@ -88,7 +88,7 @@ public class Publisher {
 	    	
 	    	for (mediaItemIndex=0;mediaItemIndex<a.length;mediaItemIndex++)
 	    	{
-	    		String city = '/' + fare.getDestination().getCityName().toLowerCase() + ".jpg";   	 
+	    		String city = '/' + fare.getDestination().getCityName().replaceAll("'", "").replaceAll(" ", "_").toLowerCase() + ".jpg";   	 
 	    		String link = ((String)((HashMap)a[mediaItemIndex]).get("link"));
 	    			    				
 	    		if(link.toLowerCase().contains(city))
@@ -108,7 +108,7 @@ public class Publisher {
 	        	{
 	    			
 
-		    		String country = '/' + fare.getDestination().getCountry().toLowerCase() + ".jpg";       		
+		    		String country = '/' + fare.getDestination().getCountry().replaceAll("'", "").replaceAll(" ", "_").toLowerCase() + ".jpg";       		
 		    		String link = ((String)((HashMap)a[mediaItemIndex]).get("link"));
 		    		
 	        		if(link.toLowerCase().contains(country.toLowerCase()))
@@ -120,6 +120,7 @@ public class Publisher {
 	        		}
 	        	}
 	    	}
+	    	
 	    	//TODO
 	    	/*
 	    	
@@ -129,12 +130,15 @@ public class Publisher {
 	    	{
 	    		for (mediaItemIndex=0;mediaItemIndex<a.length;mediaItemIndex++)
 	        	{
-	        		if(((String)((HashMap)a[mediaItemIndex]).get("link")).contains(fare.getOrigin().getRegion().toLowerCase()))
+	        		String region = '/' + fare.getDestination().getRegion().replaceAll("'", "").replaceAll(" ", "_").toLowerCase() + ".jpg";       		
+		    		String link = ((String)((HashMap)a[mediaItemIndex]).get("link"));
+		    		
+	        		if(link.toLowerCase().contains(region.toLowerCase()))
 	        		{
-	        			regionFound = true;
+	        			countryFound = true;
 	        			String wpMediaID = (String) ((HashMap)a[mediaItemIndex]).get("attachment_id");
-	    				mediaID = Integer.parseInt(wpMediaID);
-	        			break;
+		    			mediaID = Integer.parseInt(wpMediaID);
+		    			break;
 	        		}
 	        	}
 	    	}

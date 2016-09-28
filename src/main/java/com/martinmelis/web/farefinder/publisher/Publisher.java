@@ -49,7 +49,7 @@ public class Publisher {
 	
 	public void publishFareToPortal(RoundTripFare fare) throws Exception {
 	    
-	      /*	
+	     	/*
 		AirportStructure origin = new AirportStructure (null, null, null, null, null, null, null, null, null, null, null);
 		AirportStructure destination = new AirportStructure (null, null, null, null, null, null, null, null, null, null, null);
 		origin.setCityName("Vienna");
@@ -88,7 +88,7 @@ public class Publisher {
 	    	
 	    	for (mediaItemIndex=0;mediaItemIndex<a.length;mediaItemIndex++)
 	    	{
-	    		String city = '\\' + fare.getDestination().getCityName().toLowerCase() + '.' + "jpg";   	 
+	    		String city = '/' + fare.getDestination().getCityName().toLowerCase() + ".jpg";   	 
 	    		String link = ((String)((HashMap)a[mediaItemIndex]).get("link"));
 	    			    				
 	    		if(link.toLowerCase().contains(city))
@@ -108,7 +108,7 @@ public class Publisher {
 	        	{
 	    			
 
-		    		String country = '\\' + fare.getDestination().getCountry().toLowerCase() + '.' + "jpg";       		
+		    		String country = '/' + fare.getDestination().getCountry().toLowerCase() + ".jpg";       		
 		    		String link = ((String)((HashMap)a[mediaItemIndex]).get("link"));
 		    		
 	        		if(link.toLowerCase().contains(country.toLowerCase()))

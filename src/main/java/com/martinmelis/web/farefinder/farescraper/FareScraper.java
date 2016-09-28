@@ -227,6 +227,7 @@ public class FareScraper {
 		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd.MM.yyyy");
 		Calendar cal = Calendar.getInstance();		
 		String faresDescription = "Last Fares update \t\t" + dateFormat.format(cal.getTime()) +"\n";
+		
 		//TODO Temporarily we delete all published posts, this will be changed
 		portalPublisher.deleteAllFaresOnPortal();
 		

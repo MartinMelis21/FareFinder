@@ -108,7 +108,7 @@ public class Publisher {
 	        	{
 	    			
 
-		    		String country = '\\' + fare.getDestination().getCountry().toLowerCase() + '.';	    		
+		    		String country = '\\' + fare.getDestination().getCountry().toLowerCase() + '.' + "jpg";       		
 		    		String link = ((String)((HashMap)a[mediaItemIndex]).get("link"));
 		    		
 	        		if(link.toLowerCase().contains(country.toLowerCase()))

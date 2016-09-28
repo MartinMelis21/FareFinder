@@ -61,7 +61,7 @@ public class PostPublish extends HttpServlet{
 	  protected void doGet(HttpServletRequest request,
 	     HttpServletResponse response) throws ServletException, IOException {
 	   try {
-		pb.deleteAllFaresOnPortal();
+		pb.publishFareToPortal(null);;
 	} catch (Exception e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();

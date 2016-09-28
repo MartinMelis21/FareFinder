@@ -83,8 +83,7 @@ public class SchedulerJob implements org.quartz.StatefulJob {
 	public void execute (JobExecutionContext context)
 	throws JobExecutionException {
 		 
-	      
-	      
+	       
 	    FareScraper fareScraper = null;
 	    BufferedWriter dataOut;
 	    String fares = "";
@@ -106,7 +105,6 @@ public class SchedulerJob implements org.quartz.StatefulJob {
 		}
 		
 		System.out.println("Fares updated!");
-		
 	}
 	
 	

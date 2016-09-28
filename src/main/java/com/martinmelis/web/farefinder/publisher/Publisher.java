@@ -14,6 +14,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 
+import dataTypes.AirportStructure;
 import dataTypes.RoundTripFare;
 
 public class Publisher {
@@ -48,7 +49,31 @@ public class Publisher {
 	
 	public void publishFareToPortal(RoundTripFare fare) throws Exception {
 	    
-	      
+	      /*	
+		AirportStructure origin = new AirportStructure (null, null, null, null, null, null, null, null, null, null, null);
+		AirportStructure destination = new AirportStructure (null, null, null, null, null, null, null, null, null, null, null);
+		origin.setCityName("Vienna");
+		destination.setCityName("Kutaisi");
+		
+		origin.setCountry("Austria");
+		destination.setCountry("Georgia");
+		
+		origin.setLatitude(1.0);
+		origin.setLongtitude(1.0);
+		
+		destination.setLatitude(1.0);
+		destination.setLongtitude(1.0);
+		
+		RoundTripFare fare = new RoundTripFare(origin, destination, 0, null, null, 0, 0, null);
+		fare.setBookingURL("booking URL");
+		
+		fare.setOrigin(origin);
+		fare.setDestination(destination);
+		fare.setPrice(0);
+		fare.setSaleRatio(0);
+		fare.setDealRatio(0);
+		*/
+		
 	      //-------------------Automatic thumbnail insertion----------------------
 	      
 	      
@@ -63,7 +88,10 @@ public class Publisher {
 	    	
 	    	for (mediaItemIndex=0;mediaItemIndex<a.length;mediaItemIndex++)
 	    	{
-	    		if(((String)((HashMap)a[mediaItemIndex]).get("link")).contains(fare.getOrigin().getCityName().toLowerCase()))
+	    		String city = '\\' + fare.getDestination().getCityName().toLowerCase() + '.' + "jpg";   	 
+	    		String link = ((String)((HashMap)a[mediaItemIndex]).get("link"));
+	    			    				
+	    		if(link.toLowerCase().contains(city))
 	    		{
 	    			cityFound = true;
 	    			String wpMediaID = (String) ((HashMap)a[mediaItemIndex]).get("attachment_id");
@@ -78,7 +106,12 @@ public class Publisher {
 	    	{
 	    		for (mediaItemIndex=0;mediaItemIndex<a.length;mediaItemIndex++)
 	        	{
-	        		if(((String)((HashMap)a[mediaItemIndex]).get("link")).contains(fare.getOrigin().getCountry().toLowerCase()))
+	    			
+
+		    		String country = '\\' + fare.getDestination().getCountry().toLowerCase() + '.';	    		
+		    		String link = ((String)((HashMap)a[mediaItemIndex]).get("link"));
+		    		
+	        		if(link.toLowerCase().contains(country.toLowerCase()))
 	        		{
 	        			countryFound = true;
 	        			String wpMediaID = (String) ((HashMap)a[mediaItemIndex]).get("attachment_id");
@@ -109,7 +142,7 @@ public class Publisher {
 	    	
 	    	//If nothing is present we use the generic one
 	    	if (cityFound == false && countryFound == false && regionFound == false)
-	    		mediaID = 7;
+	    		mediaID = 1520;
 	      
 	      //---------------------------------------------------------------------
 	      

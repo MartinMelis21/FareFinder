@@ -22,9 +22,10 @@ public class Publisher {
 	XmlRpcClientConfigImpl config;
 	XmlRpcClient client;
 	Vector params;
-
-	public Publisher() {
-		  config = new XmlRpcClientConfigImpl();
+	
+	private void initializeConnection()
+	{
+		config = new XmlRpcClientConfigImpl();
 	      config.setBasicPassword("P(qo#zKmm6hfXAq*X8");
 	      config.setBasicUserName("martinmelis");
 	      config.setEnabledForExtensions(true);
@@ -49,6 +50,7 @@ public class Publisher {
 	
 	public void publishFareToPortal(RoundTripFare fare) throws Exception {
 	    
+		initializeConnection ();
 	     	/*
 		AirportStructure origin = new AirportStructure (null, null, null, null, null, null, null, null, null, null, null);
 		AirportStructure destination = new AirportStructure (null, null, null, null, null, null, null, null, null, null, null);

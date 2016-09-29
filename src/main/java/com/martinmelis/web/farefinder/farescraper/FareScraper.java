@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -231,8 +232,12 @@ public class FareScraper {
 		//TODO Temporarily we delete all published posts, this will be changed
 		portalPublisher.deleteAllFaresOnPortal();
 		
-		for (RoundTripFare fare : results)
-		{
+		ListIterator <RoundTripFare> li = results.listIterator(results.size());
+		// Iterate in reverse.
+		RoundTripFare fare = null;
+		
+		while(li.hasPrevious()) {
+		  fare = li.previous();
 			portalPublisher.publishFareToPortal(fare);
  			faresDescription += (("Outbound Leg\n\tFrom : " + fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName() ) + "\n");
  			faresDescription += ("\tDate : " + fare.getOutboundLeg().toString() + "\n");

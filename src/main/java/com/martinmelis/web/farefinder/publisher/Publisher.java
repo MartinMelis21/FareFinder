@@ -230,6 +230,7 @@ public class Publisher {
 	
 	public void updateFareOnPortal(RoundTripFare fare) throws Exception {
 	
+		initializeConnection();
 		Hashtable post = new Hashtable();
 		post.put("post_title", fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());
 	    post.put("post_content","Price: "+ fare.getPrice() + "\nSale: " + fare.getSaleRatio() + "\nEUR/Km: " + fare.getDealRatio() + "\nURL: " + fare.getBookingURL());
@@ -238,6 +239,7 @@ public class Publisher {
 	
 	public void outDateFareOnPortal(RoundTripFare fare) throws Exception {
 		
+		initializeConnection();
 		Hashtable post = new Hashtable();
 		post.put("post_title", "[SOLD-OUT]" + fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());
 		params.addElement(fare.getPortalPostID());
@@ -260,6 +262,7 @@ public class Publisher {
 	
 	public void deleteAllFaresOnPortal () throws NumberFormatException, Exception
 	{
+		initializeConnection();
 		Object a[] = (Object[])client.execute("metaWeblog.getRecentPosts", params);
 		 
 		int postIndex = 0;

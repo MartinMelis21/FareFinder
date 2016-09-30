@@ -216,7 +216,7 @@ public class Publisher {
 	      customFields.put("sale", fare.getSaleRatio());
 	      
 	      customFieldsList.add(customFields);  
-	      taxonomies.put("custom_fields", customFields);	      	      
+	      //taxonomies.put("custom_fields", customFields);	      	      
 	      post.put("custom_fields", customFieldsList);
 	      
 	      

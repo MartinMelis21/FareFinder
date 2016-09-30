@@ -48,10 +48,10 @@ public class Publisher {
 	      params.addElement("P(qo#zKmm6hfXAq*X8");
 	}
 	
-	public void publishFareToPortal(RoundTripFare fare2) throws Exception {
+	public void publishFareToPortal(RoundTripFare fare) throws Exception {
 	    
 		initializeConnection ();
-	     	
+	     /*	
 		AirportStructure origin = new AirportStructure (null, null, null, null, null, null, null, null, null, null, null);
 		AirportStructure destination = new AirportStructure (null, null, null, null, null, null, null, null, null, null, null);
 		origin.setCityName("Vienna");
@@ -74,7 +74,7 @@ public class Publisher {
 		fare.setPrice(0);
 		fare.setSaleRatio(0);
 		fare.setDealRatio(0);
-		
+		*/
 		
 	      //-------------------Automatic thumbnail insertion----------------------
 	      
@@ -203,20 +203,40 @@ public class Publisher {
 	      //taxonomies.put("organization", organizations);
 	      
 	      
-	      
-	      //custom fields....	      
+	      	
+	    //custom fields....	      
 	      List<Hashtable> customFieldsList = new ArrayList<Hashtable>();
-	      Hashtable customFields = new Hashtable();
-	
-    	  customFields.put("origin", fare.getOrigin().getCityName());
-	      customFields.put("destination", fare.getDestination().getCityName());
-	      customFields.put("outboundDate", fare.getOutboundLeg().toGMTString());
-	      customFields.put("inboundDate", fare.getInboundLeg().toGMTString());
-	      customFields.put("price", fare.getPrice());
-	      customFields.put("sale", fare.getSaleRatio());
 	      
-	      customFieldsList.add(customFields);  
-	      //taxonomies.put("custom_fields", customFields);	      	      
+	      Hashtable customFields = new Hashtable();
+    	  customFields.put("key", "origin");
+	      customFields.put("value", fare.getOrigin().getCityName());
+	      customFieldsList.add(customFields);
+	      
+	      customFields = new Hashtable();
+	      customFields.put("key", "destination");
+	      customFields.put("value", fare.getDestination().getCityName());
+	      customFieldsList.add(customFields);
+	      
+	      customFields = new Hashtable();
+	      customFields.put("key", "outboundDate");
+	      customFields.put("value", fare.getOutboundLeg().toString());
+	      customFieldsList.add(customFields);
+	      
+	      customFields = new Hashtable();
+	      customFields.put("key", "inboundDate");
+	      customFields.put("value", fare.getInboundLeg().toString());
+	      customFieldsList.add(customFields);
+	      
+	      customFields = new Hashtable();
+	      customFields.put("key", "price");
+	      customFields.put("value", fare.getPrice());
+	      customFieldsList.add(customFields);
+	      
+	      customFields = new Hashtable();
+	      customFields.put("key", "sale");
+	      customFields.put("value", fare.getSaleRatio());
+	      customFieldsList.add(customFields);
+	      
 	      post.put("custom_fields", customFieldsList);
 	      
 	      

@@ -75,12 +75,12 @@ public class PublisherOLD {
 		Integer postID = wp.newPost(recentPost);
 		
 		wp.editPost(18, recentPost);
-//		final List<CustomField> customFields = new ArrayList<>();
-//	    final CustomField cf1 = new CustomField();
-//	    cf1.setKey("thumb");
-//	    cf1.setValue("https://images.trvl-media.com/media/content/expus/graphics/launch/flight1320x742.jpg");
-//	    customFields.add(cf1);
-//	    recentPost.setCustom_fields(customFields);
+		final List<CustomField> customFields = new ArrayList<>();
+	    final CustomField cf1 = new CustomField();
+	    cf1.setKey("thumb");
+	    cf1.setValue("https://images.trvl-media.com/media/content/expus/graphics/launch/flight1320x742.jpg");
+	    customFields.add(cf1);
+	    recentPost.setCustom_fields(customFields);
 	    
 	   
 		System.out.println("new post page id: " + postID);

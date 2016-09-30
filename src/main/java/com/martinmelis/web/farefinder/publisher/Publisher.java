@@ -203,22 +203,23 @@ public class Publisher {
 	      //taxonomies.put("organization", organizations);
 	      
 	      
-	      /*
+	      
 	      //custom fields....	      
 	      List<Hashtable> customFieldsList = new ArrayList<Hashtable>();
 	      Hashtable customFields = new Hashtable();
 	
-    	      customFields.put("key", "url");
-	      customFields.put("value", myLink);
+    	  customFields.put("origin", fare.getOrigin().getCityName());
+	      customFields.put("destination", fare.getDestination().getCityName());
+	      customFields.put("outboundDate", fare.getOutboundLeg().toGMTString());
+	      customFields.put("inboundDate", fare.getInboundLeg().toGMTString());
+	      customFields.put("price", fare.getPrice());
+	      customFields.put("sale", fare.getSaleRatio());
+	      
 	      customFieldsList.add(customFields);  
 
-	      customFields = new Hashtable();
-	      customFields.put("key", "twitter_image");
-	      customFields.put("value", linkImage);
-	      customFieldsList.add(customFields);
 	      	      
 	      post.put("custom_fields", customFieldsList);
-	      */
+	      
 	      
 	      post.put("terms_names", taxonomies);	
 	          params.addElement(post);

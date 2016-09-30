@@ -48,10 +48,10 @@ public class Publisher {
 	      params.addElement("P(qo#zKmm6hfXAq*X8");
 	}
 	
-	public void publishFareToPortal(RoundTripFare fare) throws Exception {
+	public void publishFareToPortal(RoundTripFare fare2) throws Exception {
 	    
 		initializeConnection ();
-	     	/*
+	     	
 		AirportStructure origin = new AirportStructure (null, null, null, null, null, null, null, null, null, null, null);
 		AirportStructure destination = new AirportStructure (null, null, null, null, null, null, null, null, null, null, null);
 		origin.setCityName("Vienna");
@@ -74,7 +74,7 @@ public class Publisher {
 		fare.setPrice(0);
 		fare.setSaleRatio(0);
 		fare.setDealRatio(0);
-		*/
+		
 		
 	      //-------------------Automatic thumbnail insertion----------------------
 	      

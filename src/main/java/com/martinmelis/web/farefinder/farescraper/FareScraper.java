@@ -56,7 +56,7 @@ public class FareScraper {
 	
 	//-----global variables-----
 	public final static long MILLIS_PER_DAY = 24 * 60 * 60 * 1000L;
-	public final static String SkyScannerAPIKey = "prtl6749387986743898559646983194";
+	public final static String SkyScannerAPIKey = "er894518990376063234868271076630";
 	
 	BufferedReader in;
 	private final String USER_AGENT = "Mozilla/5.0";
@@ -534,7 +534,7 @@ public class FareScraper {
  	public String fetchFaresSS(String origin) throws Exception {
 		
 		//-------Skyscanner API URL------
-		String skyScannerUrl = "http://partners.api.skyscanner.net/apiservices/browsequotes/v1.0/SK/EUR/en-US/"+origin+"/anywhere/anytime/anytime?apiKey=" + SkyScannerAPIKey;
+		String skyScannerUrl = "http://partners.api.skyscanner.net/apiservices/browsequotes/v1.0/SK/EUR/en-US/"+origin+"/anywhere/anytime/anytime?apiKey=prtl6749387986743898559646983194";
 		String response = skyScannerGetRequest (skyScannerUrl);
 		return response.toString();
 	}
@@ -589,6 +589,9 @@ public class FareScraper {
  		
  		
         //-------Polling via HTTP get------
+        
+        //wait untill Skyscanner provides URL for session
+        Thread.sleep(1000);
         String itineraries = skyScannerGetRequest (sessionKey +"?apiKey=" + SkyScannerAPIKey);
         
         //We parse the price of the cheapest and compare if it is what we expect
@@ -601,6 +604,10 @@ public class FareScraper {
             
             
             NodeList itinerariesList = doc.getElementsByTagName("ItineraryApiDto");
+            
+            //in case provided session key doesnt work
+            if (itinerariesList == null)
+            	return null;
             
             //TODO enforce order in HTTP request prior to this
             //I take the first one since the list is ordered

@@ -39,7 +39,8 @@ public class SchedulerJob implements org.quartz.StatefulJob {
 			//-----Defining the List of originating countries-----
 		  	  
 			  origins = new ArrayList <String> ();
-			  	origins.add("AT");
+			  /*	
+			    origins.add("AT");
 			  	origins.add("SK");
 			  	origins.add("CZ");
 			  	origins.add("HU");
@@ -52,8 +53,10 @@ public class SchedulerJob implements org.quartz.StatefulJob {
 			  	origins.add("IT");
 			  	origins.add("PT");
 			  	origins.add("ES");
-			  	origins.add("UK");
 			  	origins.add("FR");
+			  	*/
+			  	origins.add("UK");
+			  	
 			  	
 			  		
 			//-----------------connect to Database-----------------

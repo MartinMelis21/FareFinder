@@ -241,6 +241,11 @@ public class Publisher {
 	      customFields.put("value", fare.getSaleRatio());
 	      customFieldsList.add(customFields);
 	      
+	      customFields = new Hashtable();
+	      customFields.put("key", "bookingURL");
+	      customFields.put("value", fare.getBookingURL());
+	      customFieldsList.add(customFields);
+	      
 	      post.put("custom_fields", customFieldsList);
 	      
 	      

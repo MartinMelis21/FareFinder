@@ -397,7 +397,7 @@ public class FareScraper {
      				destinationID = updateSSID(locationList, destinationSSID, conn);     			
      			
      			RoundTripFare fare = 	getRoundTripFare (originID,destinationID,price,outboundDate,inboundDate);
-     			fare.setBookingURL("SkyScanner");
+     			fare.setBookingURL("http://www.skyscanner.com");
      			fares.add(fare);
      			
 

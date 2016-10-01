@@ -219,7 +219,7 @@ public class Publisher {
 	      customFieldsList.add(customFields);
 	      
 	      //----Date format definition------
-	      SimpleDateFormat dateFormat = new SimpleDateFormat("E, dd.MM.yyyy");
+	      SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy (E)");
 	      
 	      customFields = new Hashtable();
 	      customFields.put("key", "outboundDate");

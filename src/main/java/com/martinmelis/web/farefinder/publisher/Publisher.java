@@ -149,7 +149,7 @@ public class Publisher {
 	    	
 	    	//If nothing is present we use the generic one
 	    	if (cityFound == false && countryFound == false && regionFound == false)
-	    		mediaID = 4960;
+	    		mediaID = 4910;
 	      
 	      //---------------------------------------------------------------------
 	      

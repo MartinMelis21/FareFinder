@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
@@ -55,6 +56,7 @@ public class FareScraper {
 	
 	//-----global variables-----
 	public final static long MILLIS_PER_DAY = 24 * 60 * 60 * 1000L;
+	public final static String SkyScannerAPIKey = "prtl6749387986743898559646983194";
 	
 	BufferedReader in;
 	private final String USER_AGENT = "Mozilla/5.0";
@@ -301,6 +303,7 @@ public class FareScraper {
 	     			   		
 	     			if (fare.getOrigin().getZone() == fare.getDestination().getZone()  || fare.getPrice() > 300 || fare.getSaleRatio()<30)
 	     			{
+	     				
 	     				if (fare.getIsNew())
 		     				insertDatabaseFare (fare,false);
 		     			else
@@ -308,6 +311,16 @@ public class FareScraper {
 	     			}
 	     			else
 	     			{
+	     				//-----------Skyscanner live price check--------------
+	     				
+	     				if (fare.getBookingURL().equals("http://www.skyscanner.com"))
+	     				{
+	     					// If the live checked price is not in the limit we skip this fare
+	     					if (getSkyScannerBookingURL(fare)==null)
+	     						continue;
+	     				}
+	     				
+	     				//-----------Fare updated to database-----------
 	     				if (fare.getIsNew())
 		     				insertDatabaseFare (fare,true);
 		     			else
@@ -316,7 +329,7 @@ public class FareScraper {
 	     				resultFares.add(fare);
 	     				
 	     				
-	     				//---------------notification------------
+	     				//--------------------notification----------------
 	     				
 	     				
 	     				//I check lastFareNotification
@@ -348,6 +361,7 @@ public class FareScraper {
 		
 		return sortFares(resultFares);
 	}
+	
 	
 	public ArrayList <RoundTripFare> getFareListSS (String origin) throws Exception
 	{
@@ -399,7 +413,7 @@ public class FareScraper {
      			RoundTripFare fare = 	getRoundTripFare (originID,destinationID,price,outboundDate,inboundDate);
      			fare.setBookingURL("http://www.skyscanner.com");
      			fares.add(fare);
-     			
+     			   			
 
      			System.out.println("Outbound Leg\n\tFrom : " + fare.getOrigin().getCityName()  + " to " + fare.getDestination().getCityName() );
      			System.out.println("\tDate : " + fare.getOutboundLeg().toString());
@@ -493,11 +507,9 @@ public class FareScraper {
 		
 	}
 	
- 	public String fetchFaresSS(String origin) throws Exception {
-		
-		//-------Skyscanner API URL------
-		String skyScannerUrl = "http://partners.api.skyscanner.net/apiservices/browsequotes/v1.0/SK/EUR/en-US/"+origin+"/anywhere/anytime/anytime?apiKey=prtl6749387986743898559646983194";
-		URL skyScannerObj = new URL(skyScannerUrl);
+	public String skyScannerGetRequest (String ssURL) throws IOException
+	{
+		URL skyScannerObj = new URL(ssURL);
 		HttpURLConnection skyScannerCon = (HttpURLConnection) skyScannerObj.openConnection();
 		skyScannerCon.setRequestMethod("GET");
 		skyScannerCon.setRequestProperty("User-Agent", USER_AGENT);
@@ -509,7 +521,7 @@ public class FareScraper {
 		BufferedReader in = new BufferedReader(new InputStreamReader(skyScannerCon.getInputStream()));
 		String inputLine;
 		StringBuffer response = new StringBuffer();
-
+				
 		while ((inputLine = in.readLine()) != null) {
 			response.append(inputLine);
 		}
@@ -517,6 +529,100 @@ public class FareScraper {
 		
 		skyScannerCon.disconnect();
 		return response.toString();
+	}
+	
+ 	public String fetchFaresSS(String origin) throws Exception {
+		
+		//-------Skyscanner API URL------
+		String skyScannerUrl = "http://partners.api.skyscanner.net/apiservices/browsequotes/v1.0/SK/EUR/en-US/"+origin+"/anywhere/anytime/anytime?apiKey=" + SkyScannerAPIKey;
+		String response = skyScannerGetRequest (skyScannerUrl);
+		return response.toString();
+	}
+ 	
+ 	public String skyScannerGetSessionKey (String ssURL, byte[] parameters) throws IOException
+ 	{
+ 		URL url = new URL(ssURL);
+ 		HttpURLConnection skyScannerCon = (HttpURLConnection)url.openConnection();
+ 		skyScannerCon.setRequestMethod("POST");
+        skyScannerCon.setRequestProperty("User-Agent", USER_AGENT);
+		skyScannerCon.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		skyScannerCon.setRequestProperty("Accept", "application/xml");		
+		skyScannerCon.setRequestProperty("Content-Length", String.valueOf(parameters.length));
+		skyScannerCon.setDoOutput(true);
+		skyScannerCon.getOutputStream().write(parameters);
+		String sessionString = skyScannerCon.getHeaderField("Location");
+
+		return sessionString;
+ 	}
+ 	
+ 	public String getSkyScannerBookingURL(RoundTripFare fare) throws Exception {
+		
+ 		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		//setting up parameters
+ 		Map<String, String> params = new LinkedHashMap<String, String>();
+        params.put("apiKey", SkyScannerAPIKey);
+        params.put("country", "DE");
+        params.put("currency", "EUR");
+        params.put("locale", "en-US");
+        params.put("originplace", fare.getOrigin().getIataFaa());
+        params.put("destinationplace", fare.getDestination().getIataFaa());
+        params.put("outbounddate", dateFormat.format(fare.getOutboundLeg()));
+        params.put("inbounddate", dateFormat.format(fare.getInboundLeg()));
+        params.put("locationschema", "iata");
+        params.put("cabinclass", "Economy");
+        params.put("adults", "1");
+        params.put("children", "0");
+        params.put("infants", "0");
+        params.put("groupPricing", "true");
+        
+        StringBuilder postData = new StringBuilder();
+        
+        for (Map.Entry<String,String> param : params.entrySet()) {
+            if (postData.length() != 0) postData.append('&');
+            postData.append(URLEncoder.encode(param.getKey(), "UTF-8"));
+            postData.append('=');
+            postData.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));
+        }
+        
+        byte[] postDataBytes = postData.toString().getBytes("UTF-8");
+        String sessionKey = skyScannerGetSessionKey ("http://partners.api.skyscanner.net/apiservices/pricing/v1.0?", postDataBytes);
+ 		
+ 		
+        //-------Polling via HTTP get------
+        String itineraries = skyScannerGetRequest (sessionKey +"?apiKey=" + SkyScannerAPIKey);
+        
+        //We parse the price of the cheapest and compare if it is what we expect
+        
+        	
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(new InputSource(new StringReader(itineraries)));
+            doc.getDocumentElement().normalize();
+            
+            
+            NodeList itinerariesList = doc.getElementsByTagName("ItineraryApiDto");
+            
+            //TODO enforce order in HTTP request prior to this
+            //I take the first one since the list is ordered
+        	Node nNode = itinerariesList.item(0);
+        	Double itineraryPrice = null;		
+        	String bookingURL = null;
+        	
+        		if (nNode.getNodeType() == Node.ELEMENT_NODE) 
+        		{
+        			Element eElement = (Element) nNode;
+        			itineraryPrice =	Double.parseDouble(((Element) eElement.getElementsByTagName("PricingOptionApiDto").item(0)).getElementsByTagName("Price").item(0).getTextContent());
+         			bookingURL = 	((Element) eElement.getElementsByTagName("PricingOptionApiDto").item(0)).getElementsByTagName("DeeplinkUrl").item(0).getTextContent();	
+        		}
+        
+				if (itineraryPrice != null && (itineraryPrice < fare.getPrice() || itineraryPrice < (fare.getPrice()*1.05)))    
+				{
+					fare.setPrice(itineraryPrice.intValue());
+					fare.setBookingURL(bookingURL);
+					return bookingURL;
+				}
+				else
+					return null;
 	}
 
  	public String fetchFaresKiwi(String origin) throws Exception {

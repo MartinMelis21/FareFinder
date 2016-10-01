@@ -55,6 +55,8 @@ public class SchedulerJob implements org.quartz.StatefulJob {
 			  	origins.add("ES");
 			  	origins.add("FR");
 			  	origins.add("UK");
+			  	origins.add("NL");
+			  	origins.add("BE");
 			  	
 			  	
 			  		

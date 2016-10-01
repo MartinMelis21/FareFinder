@@ -2,6 +2,7 @@ package com.martinmelis.web.farefinder.publisher;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -217,14 +218,17 @@ public class Publisher {
 	      customFields.put("value", fare.getDestination().getCityName());
 	      customFieldsList.add(customFields);
 	      
+	      //----Date format definition------
+	      SimpleDateFormat dateFormat = new SimpleDateFormat("E, dd.MM.yyyy");
+	      
 	      customFields = new Hashtable();
 	      customFields.put("key", "outboundDate");
-	      customFields.put("value", fare.getOutboundLeg().toString());
+	      customFields.put("value", dateFormat.format(fare.getOutboundLeg()));
 	      customFieldsList.add(customFields);
 	      
 	      customFields = new Hashtable();
 	      customFields.put("key", "inboundDate");
-	      customFields.put("value", fare.getInboundLeg().toString());
+	      customFields.put("value", dateFormat.format(fare.getInboundLeg()));
 	      customFieldsList.add(customFields);
 	      
 	      customFields = new Hashtable();

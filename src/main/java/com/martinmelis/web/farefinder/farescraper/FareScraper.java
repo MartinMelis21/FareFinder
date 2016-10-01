@@ -376,10 +376,9 @@ public class FareScraper {
      		{
      			Element eElement = (Element) nNode;     			
      			int price = Integer.parseInt(eElement.getElementsByTagName("MinPrice").item(0).getTextContent());
-     			//TODO problem with time conversion from format
-     			DateFormat df = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss", Locale.ENGLISH);
-     			String outboundDateString = ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent().replaceAll("T"," ");
-     			String inboundDateString = ((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent().replaceAll("T"," ");
+     			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+     			String outboundDateString = ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent();
+     			String inboundDateString = ((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent();
      			
      			Date outboundDate = 	df.parse(outboundDateString);
      			Date inboundDate = 		df.parse(inboundDateString);
@@ -449,10 +448,14 @@ public class FareScraper {
      			String originIata = eElement.getElementsByTagName("flyFrom").item(0).getTextContent();
      			String destinationIata = eElement.getElementsByTagName("flyTo").item(0).getTextContent();
      			String bookingToken = eElement.getElementsByTagName("booking_token").item(0).getTextContent();
-     			//TODO problem with time conversion from format
-     			DateFormat df = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss", Locale.ENGLISH);     			
-     			Date outboundDate = 	df.parse(((Element) eElement.getElementsByTagName("route").item(0)).getElementsByTagName("aTimeUTC").item(0).getTextContent());
-     			Date inboundDate = 		df.parse(((Element) eElement.getElementsByTagName("route").item(1)).getElementsByTagName("aTimeUTC").item(0).getTextContent());
+     			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss");     			
+     			
+     			String outboundDateString = ((Element) eElement.getElementsByTagName("route").item(0)).getElementsByTagName("aTime").item(0).getTextContent();
+     			String inboundDateString =  ((Element) eElement.getElementsByTagName("route").item(1)).getElementsByTagName("aTime").item(0).getTextContent();
+     			
+     			Date outboundDate = 	df.parse(outboundDateString);
+     			Date inboundDate = 		df.parse(inboundDateString);
+     			
      			
      			if ((originID = kiwiMapping.get(originIata)) == null)
      				// I update SSID to database

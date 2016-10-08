@@ -453,7 +453,6 @@ public class FareScraper {
 	    	     			// We were unable to register updated fare price
 	    	     			if (livePrice == null || livePrice >=300 || ((fare.getBaseFare()* 0.7)/livePrice < 1 ))
 	    	     			{
-	    	     					fare.setPrice(livePrice);
 	    	     					if (fare.getIsNew())
 	    			     				insertDatabaseFare (fare,true);
 	    			     			else

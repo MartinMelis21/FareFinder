@@ -17,9 +17,11 @@ public class RoundTripFare {
 	private String bookingURL = null;
 	private Integer numberOfAccountedPricesRoundTrip;
 	private Integer portalPostID = null;
+	private String portalPostStatus = null;
+	private Integer lastAccountedPrice = null;
 	
 	
-	public RoundTripFare(AirportStructure origin, AirportStructure destination, int price, Date outbound, Date inbound, double baseFare, int numberOfAccountedFares, Date lastFareNotification) {
+	public RoundTripFare(AirportStructure origin, AirportStructure destination, int price, Date outbound, Date inbound, double baseFare, int numberOfAccountedFares, Date lastFareNotification,Integer portalPostID,String portalPostStatus) {
 		super();
 		this.origin = origin;
 		this.destination = destination;
@@ -33,7 +35,8 @@ public class RoundTripFare {
 		this.isNew = false;
 		this.numberOfAccountedPricesRoundTrip = numberOfAccountedFares;
 		this.lastFareNotification = lastFareNotification;
-		
+		this.portalPostID = portalPostID;
+		this.portalPostStatus = portalPostStatus;
 	}
 		
 	private double getDistance () {
@@ -49,12 +52,36 @@ public class RoundTripFare {
 	
 	
 	
+	public Integer getLastAccountedPrice() {
+		return lastAccountedPrice;
+	}
+
+	public void setLastAccountedPrice(Integer lastAccountedPrice) {
+		this.lastAccountedPrice = lastAccountedPrice;
+	}
+
+	public String getPortalPostStatus() {
+		return portalPostStatus;
+	}
+
+	public void setPortalPostStatus(String portalPostStatus) {
+		this.portalPostStatus = portalPostStatus;
+	}
+
 	public Integer getPortalPostID() {
 		return portalPostID;
 	}
 
 	public void setPortalPostID(Integer portalPostID) {
+		
+		try{
+		//TODO I need to insert new portalPostID to database
+			
 		this.portalPostID = portalPostID;
+		}
+		catch(Exception e){
+			
+		}
 	}
 
 	public String getBookingURL() {

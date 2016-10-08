@@ -49,7 +49,7 @@ public class Publisher {
 	      params.addElement("P(qo#zKmm6hfXAq*X8");
 	}
 	
-	public void publishFareToPortal(RoundTripFare fare) throws Exception {
+	public Integer publishFareToPortal(RoundTripFare fare) throws Exception {
 	    
 		initializeConnection ();
 	     /*	
@@ -159,7 +159,7 @@ public class Publisher {
 	      
 	      Hashtable post = new Hashtable();
 	      post.put("post_title", fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());
-	      post.put("post_content","Price: "+ fare.getPrice() + "\nSale: " + fare.getSaleRatio() + "\nEUR/Km: " + fare.getDealRatio() + "\nURL: " + fare.getBookingURL());
+	      post.put("post_content","Price: "+ fare.getPrice() + "\nSale: " + fare.getSaleRatio() + "\nEUR/Km: " + fare.getDealRatio());
 		  post.put("post_status", "publish");
 	      post.put("post_thumbnail", mediaID.toString());
 	      post.put("comment_status", "open");
@@ -210,12 +210,12 @@ public class Publisher {
 	      
 	      Hashtable customFields = new Hashtable();
     	  customFields.put("key", "origin");
-	      customFields.put("value", fare.getOrigin().getCityName());
+	      customFields.put("value", fare.getOrigin().getCityName() + " (" + fare.getOrigin().getCountry() + ")" );
 	      customFieldsList.add(customFields);
 	      
 	      customFields = new Hashtable();
 	      customFields.put("key", "destination");
-	      customFields.put("value", fare.getDestination().getCityName());
+	      customFields.put("value", fare.getDestination().getCityName() + " (" + fare.getDestination().getCountry() + ")");
 	      customFieldsList.add(customFields);
 	      
 	      //----Date format definition------
@@ -253,36 +253,44 @@ public class Publisher {
 	          params.addElement(post);
     		  //log.debug("params:" + params);
     		  String postId = (String) client.execute("wp.newPost", params);
-    	     
+    		  fare.setPortalPostID(Integer.parseInt(postId));
+    		  
+    return 	 Integer.parseInt(postId);   
 	  
 }
 	
-	public void updateFareOnPortal(RoundTripFare fare) throws Exception {
+	public void updateFareOnPortal(RoundTripFare fare, String newStatus) throws Exception {
 	
-		initializeConnection();
-		Hashtable post = new Hashtable();
-		post.put("post_title", fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());
-	    post.put("post_content","Price: "+ fare.getPrice() + "\nSale: " + fare.getSaleRatio() + "\nEUR/Km: " + fare.getDealRatio() + "\nURL: " + fare.getBookingURL());
-		
-	}
-	
-	public void outDateFareOnPortal(RoundTripFare fare) throws Exception {
 		
 		initializeConnection();
-		Hashtable post = new Hashtable();
-		post.put("post_title", "[SOLD-OUT]" + fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());
+		
+		//first we need to get id of post relevant for current fare		
 		params.addElement(fare.getPortalPostID());
-  		params.addElement(post);
-  		client.execute("wp.editPost", params);
-  	    
+		//now we update the specific fare on portal
+		
+		Hashtable post = new Hashtable();
+		if (newStatus.equals("updated"))
+			post.put("post_title", "[UPDATED] " + fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());
+		if (newStatus.equals("expired"))
+			post.put("post_title", "[EXPIRED] " + fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());
+		if (newStatus.equals("active"))
+			post.put("post_title",fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());	
+		if (newStatus.equals("updated") || newStatus.equals("active"))
+			post.put("post_content","Price: "+ fare.getPrice() + "\nSale: " + fare.getSaleRatio() + "\nEUR/Km: " + fare.getDealRatio());
+		
+		params.addElement(post);
+		client.execute("wp.editPost", params);
 	}
 	
-	//TODO change from int ID to fare.get
-	public void deleteFareOnPortal(int portalPostID) throws Exception {
+	public void deleteFareOnPortal(RoundTripFare fare) throws Exception {
+		deletePostOnPortal(fare.getPortalPostID());  	      
+	}
+	
+	public void deletePostOnPortal(Integer postID) throws Exception {
 		
 		Vector paramsDelete = new Vector();
 		paramsDelete.addElement(new Integer(0));
-		paramsDelete.addElement(portalPostID);
+		paramsDelete.addElement(postID);
 		paramsDelete.addElement("martinmelis");
 		paramsDelete.addElement("P(qo#zKmm6hfXAq*X8");
 		client.execute("metaWeblog.deletePost", paramsDelete);
@@ -304,7 +312,7 @@ public class Publisher {
     	}
 			
 		for (int postID: postIDs)
-			deleteFareOnPortal(postID);
+			deletePostOnPortal(postID);
 		
 	}
 	

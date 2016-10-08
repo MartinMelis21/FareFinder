@@ -402,10 +402,9 @@ public class FareScraper {
 			     							//we create new post
 			     							try
 			    	     					{
-			    	     						portalPublisher.publishFareToPortal(fare);
-			    	     						fare.setPortalPostStatus("active");
-			    		     					updateFarePublication (fare);
-			    		     					
+			     								portalPublisher.updateFareOnPortal(fare,"active");
+				     							fare.setPortalPostStatus("active");
+				     							updateFarePublication (fare);		    		     					
 			    		     					
 			    	     					}
 			    	     					catch (Exception e)

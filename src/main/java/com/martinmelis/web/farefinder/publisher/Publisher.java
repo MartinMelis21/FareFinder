@@ -266,6 +266,7 @@ public class Publisher {
 		
 		//first we need to get id of post relevant for current fare		
 		params.addElement(fare.getPortalPostID());
+		Hashtable taxonomies = new Hashtable();
 		//now we update the specific fare on portal
 		
 		Hashtable post = new Hashtable();
@@ -278,7 +279,63 @@ public class Publisher {
 		if (newStatus.equals("updated") || newStatus.equals("active"))
 			post.put("post_content","Price: "+ fare.getPrice() + "\nSale: " + fare.getSaleRatio() + "\nEUR/Km: " + fare.getDealRatio());
 		
-		params.addElement(post);
+		 //custom fields....	      
+	      List<Hashtable> customFieldsList = new ArrayList<Hashtable>();
+	      
+	      Hashtable customFields = new Hashtable();
+	      customFields.put("key", "origin");
+	      customFields.put("value", fare.getOrigin().getCityName() + " (" + fare.getOrigin().getCountry() + ")" );
+	      customFieldsList.add(customFields);
+	      
+	      customFields = new Hashtable();
+	      customFields.put("key", "destination");
+	      customFields.put("value", fare.getDestination().getCityName() + " (" + fare.getDestination().getCountry() + ")");
+	      customFieldsList.add(customFields);
+	      
+	      //----Date format definition------
+	      SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy (E)");
+	      
+	      customFields = new Hashtable();
+	      customFields.put("key", "outboundDate");
+	      customFields.put("value", dateFormat.format(fare.getOutboundLeg()));
+	      customFieldsList.add(customFields);
+	      
+	      customFields = new Hashtable();
+	      customFields.put("key", "inboundDate");
+	      customFields.put("value", dateFormat.format(fare.getInboundLeg()));
+	      customFieldsList.add(customFields);
+	      
+	      customFields = new Hashtable();
+	      customFields.put("key", "price");
+	      customFields.put("value", fare.getPrice());
+	      customFieldsList.add(customFields);
+	      
+	      customFields = new Hashtable();
+	      customFields.put("key", "sale");
+	      customFields.put("value", fare.getSaleRatio());
+	      customFieldsList.add(customFields);
+	      
+	      customFields = new Hashtable();
+	      customFields.put("key", "bookingURL");
+	      customFields.put("value", fare.getBookingURL());
+	      customFieldsList.add(customFields);
+	      
+	      post.put("custom_fields", customFieldsList);
+	      
+	      
+	      
+	      List<String> categories = new ArrayList<String>();
+	      if (newStatus.equals("active") || newStatus.equals("updated"))
+	    	  categories.add("TopDeals"); 
+	      if (newStatus.equals("expired"))
+	    	  categories.add("ExpiredDeals"); 
+	      
+	      taxonomies.put("category", categories);
+	      
+	      
+	      params.addElement(post);
+	          
+	          
 		client.execute("wp.editPost", params);
 	}
 	

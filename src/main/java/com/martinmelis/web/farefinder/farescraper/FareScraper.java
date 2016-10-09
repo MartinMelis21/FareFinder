@@ -419,7 +419,8 @@ public class FareScraper {
 		     				}	
 		     				//fare is not interesting but is published ... we set to expired
 		     				else
-		     				{	     						
+		     				{	
+		     					
 		     					try
 		     					{
 		     						portalPublisher.updateFareOnPortal(fare,"expired");
@@ -595,7 +596,7 @@ public class FareScraper {
 	{
 		ArrayList<RoundTripFare> fares = new ArrayList<RoundTripFare>();
 		creatKiwiMapping ();
-		String fetchURL = "https://api.skypicker.com/flights?flyFrom="+origin+"&typeFlight=return&xml=1";
+		String fetchURL = "https://api.skypicker.com/flights?flyFrom="+origin+"&typeFlight=return&xml=1&oneforcity=1&limit=200";
 		String fetchedFares = kiwiGetRequest(fetchURL);		
 	
 	 try {	

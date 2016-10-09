@@ -118,7 +118,6 @@ public class FareScraper {
 		distanceCon.connect();
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(distanceCon.getInputStream(), StandardCharsets.ISO_8859_1));
-		distanceCon.disconnect();
 		String inputLine;
 		
 		Double latitude = null;
@@ -181,6 +180,10 @@ public class FareScraper {
 				      altitude = Double.parseDouble(m.group(1));
 		}
 		in.close();	
+		distanceCon.disconnect();
+		
+	if (name == null && city != null)
+		name=city;
 	
 	if (name != null && latitude != null && longtitude != null)
 		return new AirportStructure(name, city, country, latitude, longtitude, null, iataCode, altitude, ICAO, zone,null);

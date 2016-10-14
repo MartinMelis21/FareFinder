@@ -26,27 +26,34 @@ public class Publisher {
 	
 	private void initializeConnection()
 	{
+		if (config == null )
+		{
 		config = new XmlRpcClientConfigImpl();
 	      config.setBasicPassword("P(qo#zKmm6hfXAq*X8");
 	      config.setBasicUserName("martinmelis");
 	      config.setEnabledForExtensions(true);
 	      config.setEnabledForExceptions(true);
-	      try {
-			config.setServerURL(new URL("http://errorflights-martinmelis.rhcloud.com/xmlrpc.php"));
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		      try {
+				config.setServerURL(new URL("http://errorflights-martinmelis.rhcloud.com/xmlrpc.php"));
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-
+		
+		if (client == null)
+		{
 	      client = new XmlRpcClient();
 	      client.setConfig(config);
-	      
+		} 
 	      //---------setup parameters---------------
-	      
+	     if (params == null)
+	     {
 	      params = new Vector();
 	      params.addElement(new Integer(0));
 	      params.addElement("martinmelis");
 	      params.addElement("P(qo#zKmm6hfXAq*X8");
+	     }
 	}
 	
 	public Integer publishFareToPortal(RoundTripFare fare) throws Exception {
@@ -279,15 +286,25 @@ public class Publisher {
 		if (newStatus.equals("updated") || newStatus.equals("active"))
 			post.put("post_content","Price: "+ fare.getPrice() + "\nSale: " + fare.getSaleRatio() + "\nEUR/Km: " + fare.getDealRatio());
 		
+		
+			//for the existing custom fields we get their IDs
+		HashMap<String,Integer> CFMap = getCustomFieldIDs (fare.getPortalPostID());
+		
+			// we set new value for custom field ID
+		
 		 //custom fields....	      
 	      List<Hashtable> customFieldsList = new ArrayList<Hashtable>();
 	      
 	      Hashtable customFields = new Hashtable();
+	      if (CFMap.containsKey("origin"))
+	    	  customFields.put("id", CFMap.get("origin"));
 	      customFields.put("key", "origin");
 	      customFields.put("value", fare.getOrigin().getCityName() + " (" + fare.getOrigin().getCountry() + ")" );
 	      customFieldsList.add(customFields);
 	      
 	      customFields = new Hashtable();
+	      if (CFMap.containsKey("destination"))
+	    	  customFields.put("id", CFMap.get("destination"));
 	      customFields.put("key", "destination");
 	      customFields.put("value", fare.getDestination().getCityName() + " (" + fare.getDestination().getCountry() + ")");
 	      customFieldsList.add(customFields);
@@ -296,26 +313,36 @@ public class Publisher {
 	      SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy (E)");
 	      
 	      customFields = new Hashtable();
+	      if (CFMap.containsKey("outboundDate"))
+	    	  customFields.put("id", CFMap.get("outboundDate"));
 	      customFields.put("key", "outboundDate");
 	      customFields.put("value", dateFormat.format(fare.getOutboundLeg()));
 	      customFieldsList.add(customFields);
 	      
 	      customFields = new Hashtable();
+	      if (CFMap.containsKey("inboundDate"))
+	    	  customFields.put("id", CFMap.get("inboundDate"));
 	      customFields.put("key", "inboundDate");
 	      customFields.put("value", dateFormat.format(fare.getInboundLeg()));
 	      customFieldsList.add(customFields);
 	      
 	      customFields = new Hashtable();
+	      if (CFMap.containsKey("price"))
+	    	  customFields.put("id", CFMap.get("price"));
 	      customFields.put("key", "price");
 	      customFields.put("value", fare.getPrice());
 	      customFieldsList.add(customFields);
 	      
 	      customFields = new Hashtable();
+	      if (CFMap.containsKey("sale"))
+	    	  customFields.put("id", CFMap.get("sale"));
 	      customFields.put("key", "sale");
 	      customFields.put("value", fare.getSaleRatio());
 	      customFieldsList.add(customFields);
 	      
 	      customFields = new Hashtable();
+	      if (CFMap.containsKey("bookingURL"))
+	    	  customFields.put("id", CFMap.get("bookingURL"));
 	      customFields.put("key", "bookingURL");
 	      customFields.put("value", fare.getBookingURL());
 	      customFieldsList.add(customFields);
@@ -352,6 +379,34 @@ public class Publisher {
 		paramsDelete.addElement("P(qo#zKmm6hfXAq*X8");
 		client.execute("metaWeblog.deletePost", paramsDelete);
   	      
+	}
+	
+	public HashMap <String,Integer> getCustomFieldIDs(int postID) throws XmlRpcException{
+		
+		HashMap <String,Integer> resultMap = new HashMap<String,Integer> ();
+		
+		initializeConnection();		 
+		
+		Vector paramsGet = new Vector();
+		paramsGet.addElement(new Integer (0));
+		paramsGet.addElement("martinmelis");
+		paramsGet.addElement("P(qo#zKmm6hfXAq*X8");
+		paramsGet.addElement(postID);
+		
+		Object b = (Object)client.execute("wp.getPost", paramsGet);
+		Object customFields [] = ((Object [])((HashMap) b).get("custom_fields"));
+		
+		int i = 0;
+		
+		for (i=0;i<customFields.length;i++)
+		{
+			String customFieldNameKey = (String)(((HashMap)customFields[i]).get("key"));
+			Integer customFieldID =Integer.parseInt((String)(((HashMap)customFields[i]).get("id")));
+			resultMap.put(customFieldNameKey, customFieldID);
+		}
+			
+		return resultMap;
+		
 	}
 	
 	public void deleteAllFaresOnPortal () throws NumberFormatException, Exception

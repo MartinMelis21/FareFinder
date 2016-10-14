@@ -64,6 +64,7 @@ public class FareScraper {
 	private HashMap <Integer,AirportStructure> locationDictionary;
 	private HashMap <Integer,Integer> skyScannerIDMapping;
 	private HashMap <String,Integer> kiwiMapping;
+	private ArrayList <String> accountedFares = null;
 	
 	StringBuffer finalResponse;
 	final String getAirportOnIDSQL = 		"SELECT a.airportName,a.airportCity,a.airportCountry,a.latitude,a.longtitude,a.iataFaa,a.altitude,a.icao,z.id, a.airportID, a.SkyScannerID from Airports a left join Countries c on a.airportCountry=c.countryName left join Zones z on c.zone=z.id WHERE airportID = ?";
@@ -94,6 +95,7 @@ public class FareScraper {
 			DateTimeFormatter fmt = DateTimeFormat.forPattern("HH:mm dd.MM.yyyy");
 			mailSender = new MailSender ();
 			portalPublisher = new Publisher();
+			accountedFares = new ArrayList <String> ();
 			
  		System.out.println("Last fares update:\t" + fmt.print(dt));	
 		finalResponse = new StringBuffer("Last fares update:\t" +fmt.print(dt));
@@ -298,7 +300,7 @@ public class FareScraper {
 		
 	}
 	
-	Integer getLivePrice (RoundTripFare fare) throws Exception
+	Integer getAndSetLivePrice (RoundTripFare fare) throws Exception
 	{
 		Integer livePrice = null;
 		//---TODO new sources need to be added here---
@@ -317,7 +319,10 @@ public class FareScraper {
 		{
 			// If the live checked price is not in the limit we skip this fare
 			if ((livePrice = getKiwiLivePrice(fare))!=null)
+			{
+				fare.setPrice(livePrice);
 				return livePrice;
+			}
 			else
 				return null;
 		}
@@ -357,26 +362,15 @@ public class FareScraper {
 	     			if (fare.getPortalPostStatus() !=null)
 	     				{
 		     				
-		     				// fare is published and interesting
-		     				if (fare.getOrigin().getZone() != fare.getDestination().getZone()  && fare.getPrice() <= 300 && fare.getSaleRatio() >= 30)
+		     				// fare is published and interesting..to save on calls we only call those we expect to be good
+		     				if (fare.getOrigin().getZone() != fare.getDestination().getZone()  && fare.getPrice() <= 300 && fare.getSaleRatio() >= 30 && fare.getDealRatio() <= 0.04)
 		     				{		  
-		     					Integer livePrice = getLivePrice (fare);  
-		     					if (livePrice != null)
-	    	     				{
-	    	     					fare.setPrice(livePrice);
-	    	     				}
-		    	     			
-		    	     			// We were unable to register updated fare price
-		     				// We were unable to register updated fare price
-		    	     			if (livePrice == null || livePrice >=300 || ((fare.getBaseFare()* 0.7)/livePrice < 1 ))
+		     					Integer livePrice = getAndSetLivePrice (fare);  
+		     					// We were unable to register updated fare price or the live gathered price is not interesting
+		    	     			if (livePrice != null && livePrice < 300 && ((fare.getBaseFare()* 0.7)/livePrice >= 1 ) && fare.getDealRatio() <= 0.04)
 		    	     			{
-		    	     					if (fare.getIsNew())
-		    			     				insertDatabaseFare (fare,true);
-		    			     			else
-		    			     				updateDatabaseFare(fare,true);
-		    	     					
-		    	     				continue;
-		    	     			}
+		    	     			
+		    	     			///-------this means we have live price and live price is considered a deal----
 		    	     			
 		     					//If is currently published - Active/[Updated]
 			     					if (fare.getPortalPostStatus().equals("active") || fare.getPortalPostStatus().equals ("updated"))
@@ -390,13 +384,7 @@ public class FareScraper {
 				     							updateFarePublication (fare);
 				     						}
 				     						catch (Exception e)
-				     						{}		     						
-				     						//----------------
-				     						if (fare.getIsNew())
-							     				insertDatabaseFare (fare,true);
-							     			else
-							     				updateDatabaseFare(fare,true);
-			     						
+				     						{}		     					
 			     						}
 			     					}
 			     					//If is currently published - [Expired]
@@ -411,14 +399,13 @@ public class FareScraper {
 			    		     					
 			    	     					}
 			    	     					catch (Exception e)
-			    	     					{}
-			     						
-				     						if (fare.getIsNew())
-							     				insertDatabaseFare (fare,true);
-							     			else
-							     				updateDatabaseFare(fare,true);
-			     						
+			    	     					{}			     						
 			     					}
+		    	     			}
+			     					if (fare.getIsNew())
+					     				insertDatabaseFare (fare,true);
+					     			else
+					     				updateDatabaseFare(fare,true);
 		     				}	
 		     				//fare is not interesting but is published ... we set to expired
 		     				else
@@ -444,85 +431,58 @@ public class FareScraper {
 	     			{
     	     			
 	     				//is interesting
-	     				if (fare.getOrigin().getZone() != fare.getDestination().getZone()  && fare.getPrice() <= 300 && fare.getSaleRatio() >= 30)
+	     				if (fare.getOrigin().getZone() != fare.getDestination().getZone()  && fare.getPrice() <= 300 && fare.getSaleRatio() >= 30 && fare.getDealRatio() <= 0.04)
 	     				{
 	     					
-	     					Integer livePrice = getLivePrice (fare);  
-	     					if (livePrice != null)
-    	     				{
-    	     					fare.setPrice(livePrice);
-    	     				}
+	     					Integer livePrice = getAndSetLivePrice (fare);
 	    	     			
 	    	     			// We were unable to register updated fare price
-	    	     			if (livePrice == null || livePrice >=300 || ((fare.getBaseFare()* 0.7)/livePrice < 1 ))
+	    	     			if (livePrice != null && livePrice < 300 && ((fare.getBaseFare()* 0.7)/livePrice >= 1 ) && fare.getDealRatio() <= 0.04)
 	    	     			{
-	    	     					if (fare.getIsNew())
-	    			     				insertDatabaseFare (fare,true);
-	    			     			else
-	    			     				updateDatabaseFare(fare,true);
-	    	     			}
-	    	     			
-	     					try
-	     					{
-	     						fare.setPrice(livePrice);
-	     						fare.setPortalPostStatus("active");
-	     						portalPublisher.publishFareToPortal(fare);
-		     					updateFarePublication (fare);
-		     					
-		     					
-	     					}
-	     					catch (Exception e)
-	     					{}
-	     					
-	     					//we publish the fare as new active post and set database to published
-	     					if (fare.getIsNew())
-			     				insertDatabaseFare (fare,true);
-			     			else
-			     				updateDatabaseFare(fare,true);
-	     					
+		     					try
+		     					{
+		     						fare.setPortalPostStatus("active");
+		     						portalPublisher.publishFareToPortal(fare);
+			     					updateFarePublication (fare);
+		     					}
+		     					catch (Exception e)
+		     					{}
+	    	     			   					
 
-	     					//--------------------notification----------------
-		     				
-		     				
-		     				//I check lastFareNotification
-		     				Date lastAccountedDate = fare.getLastFareNotification();
-		     				DateTime lastFareNotification = new DateTime (lastAccountedDate);
-		     				//If it is more than a day or is better than 20% of previously announced
-		     				DateTime yesterday = DateTime.now().minusDays(7);
-		     				
-		     				//TODO publishing live needs to be redone
-			     			//portalPublisher.publishFareToPortal(fare);
-		     				
-		     				if (lastAccountedDate == null || (lastFareNotification.getMillis() < yesterday.getMillis()))
-		     				{	//TODO or 20% better
-		     					mailSender.sendMail("martin.melis21@gmail.com", fare);//TODO send to all mail reciepts
-		     					
-		     				}
-			     			//--------------------------------------
-		     				
-	     					
+		     					//--------------------notification----------------
+			     				
+			     				
+			     				//I check lastFareNotification
+			     				Date lastAccountedDate = fare.getLastFareNotification();
+			     				DateTime lastFareNotification = new DateTime (lastAccountedDate);
+			     				//If it is more than a day or is better than 20% of previously announced
+			     				DateTime yesterday = DateTime.now().minusDays(7);
+			     				
+			     				//TODO publishing live needs to be redone
+				     			//portalPublisher.publishFareToPortal(fare);
+			     				
+			     				if (lastAccountedDate == null || (lastFareNotification.getMillis() < yesterday.getMillis()))
+			     				{	//TODO or 20% better
+			     					mailSender.sendMail("martin.melis21@gmail.com", fare);//TODO send to all mail reciepts
+			     					
+			     				}
+	    	     			}
+			     			//--------------------------------------		     				
 	     				}	
-	     				//fare is not interesting and is not published, we skip it
-	     				else
-	     				{
-	     					// --- we leave the post as is ---
-	     					if (fare.getIsNew())
-			     				insertDatabaseFare (fare,false);
-			     			else
-			     				updateDatabaseFare(fare,false);
-	     					
-	     				}
+	     				if (fare.getIsNew())
+		     				insertDatabaseFare (fare,false);
+		     			else
+		     				updateDatabaseFare(fare,false);
 	     			}	
 	     			
 	     		}
 	         }		
 		
 		//we need to check all published fares, that were not accounted in resultFares
-		//analyzeResidualFares(resultFares);
+		analyzeResidualFares(resultFares);
 		
 		return sortFares(resultFares);
 	}
-	
 	
 	public ArrayList <RoundTripFare> getFareListSS (String origin) throws Exception
 	{
@@ -700,7 +660,6 @@ public class FareScraper {
 		return response.toString();
 	}
 	
-	
  	public String fetchFaresSS(String origin) throws Exception {
 		
 		//-------Skyscanner API URL------
@@ -726,8 +685,6 @@ public class FareScraper {
 		skyScannerCon.disconnect();
 		return sessionString;
  	}
- 	
- 	ArrayList <String> accountedFares = new ArrayList <String> ();
  	
  	public Integer getSkyScannerLivePrice(RoundTripFare fare) throws Exception {
  		
@@ -1262,8 +1219,6 @@ public class FareScraper {
  			return airportStructure;
 		}
 		
-	
-	
 	public void analyzeResidualFares (ArrayList<RoundTripFare> filteredFares) throws Exception 
 	{ 				
 			ArrayList <RoundTripFare> residualFares = new ArrayList <RoundTripFare> ();
@@ -1354,8 +1309,8 @@ public class FareScraper {
 				} 
 				else
 				{
+					origin = new AirportStructure(originAirportName,originCityName,originCountry,originLatitude,originLongtitude,originSSID,originIataFaa, originAltitude, originIcao,originZone,originAirportID);
 					locationDictionary.put(origin.getAirportID(), origin);
-		 			origin = new AirportStructure(originAirportName,originCityName,originCountry,originLatitude,originLongtitude,originSSID,originIataFaa, originAltitude, originIcao,originZone,originAirportID);
 				}
 				
 				if (locationDictionary.containsKey(destinationAirportID))
@@ -1365,9 +1320,9 @@ public class FareScraper {
 				} 
 				else
 				{
-					locationDictionary.put(destination.getAirportID(), destination);
 		 			destination = new AirportStructure(destinationAirportName,destinationCityName,destinationCountry,destinationLatitude,destinationLongtitude,destinationSSID,destinationIataFaa, destinationAltitude, destinationIcao,destinationZone,destinationAirportID);
-		 		}
+		 			locationDictionary.put(destination.getAirportID(), destination);
+				}
 				
 				RoundTripFare residualFare = new RoundTripFare (origin, destination, price, outbound, inbound, baseFare, numberOfAccountedFares, lastFareNotification,portalPostID,portalPostStatus);		
 				residualFares.add(residualFare);
@@ -1388,38 +1343,37 @@ public class FareScraper {
 						}
 	
 					
-					Integer livePrice = getLivePrice (fare);
+					Integer livePrice = getAndSetLivePrice (fare);
 					
 					if (livePrice == null || livePrice > 300 || fare.getSaleRatio() < 30)
 	 				{	
 						try
 	 					{
 	 						fare.setPortalPostStatus("expired");
-	 						fare.setPrice(livePrice);
 	     					portalPublisher.updateFareOnPortal(fare, "expired");     					
 	     					updateFarePublication (fare);
 	 					}
 	 					catch (Exception e)
 	 					{}
-							updateDatabaseFare(fare,false);
 	 				}
 					else
 					{
-						if(fare.getPortalPostStatus().equals("active") && livePrice != fare.getPrice())
+						if(fare.getPortalPostStatus().equals("active"))
 						{
-							try
-		 					{
-		 						fare.setPortalPostStatus("updated");
-		 						fare.setPrice(livePrice);
-		     					portalPublisher.updateFareOnPortal(fare, "updated");     					
-		     					updateFarePublication (fare);
-		 					}
-		 					catch (Exception e)
-		 					{}
-								updateDatabaseFare(fare,false);
-						}
+							if (livePrice != fare.getPrice())
+							{
+								try
+			 					{
+			 						fare.setPortalPostStatus("updated");
+			     					portalPublisher.updateFareOnPortal(fare, "updated");     					
+			     					updateFarePublication (fare);
+			 					}
+			 					catch (Exception e)
+			 					{}
+							}
+						}	
 					}
-		 			
+					updateDatabaseFare(fare,false);
 					}
 				}
 			

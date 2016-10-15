@@ -26,34 +26,28 @@ public class Publisher {
 	
 	private void initializeConnection()
 	{
-		if (config == null )
-		{
 		config = new XmlRpcClientConfigImpl();
-	      config.setBasicPassword("P(qo#zKmm6hfXAq*X8");
-	      config.setBasicUserName("martinmelis");
-	      config.setEnabledForExtensions(true);
-	      config.setEnabledForExceptions(true);
+	    config.setBasicPassword("P(qo#zKmm6hfXAq*X8");
+	    config.setBasicUserName("martinmelis");
+	    config.setEnabledForExtensions(true);
 		      try {
 				config.setServerURL(new URL("http://errorflights-martinmelis.rhcloud.com/xmlrpc.php"));
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}
 		
-		if (client == null)
-		{
-	      client = new XmlRpcClient();
+		
+		  client = new XmlRpcClient();
 	      client.setConfig(config);
-		} 
+		 
 	      //---------setup parameters---------------
-	     if (params == null)
-	     {
+	    
 	      params = new Vector();
 	      params.addElement(new Integer(0));
 	      params.addElement("martinmelis");
 	      params.addElement("P(qo#zKmm6hfXAq*X8");
-	     }
+	     
 	}
 	
 	public Integer publishFareToPortal(RoundTripFare fare) throws Exception {
@@ -268,6 +262,8 @@ public class Publisher {
 	
 	public void updateFareOnPortal(RoundTripFare fare, String newStatus) throws Exception {
 	
+		//for the existing custom fields we get their IDs
+		HashMap<String,Integer> CFMap = getCustomFieldIDs (fare.getPortalPostID());
 		
 		initializeConnection();
 		
@@ -286,9 +282,6 @@ public class Publisher {
 		if (newStatus.equals("updated") || newStatus.equals("active"))
 			post.put("post_content","Price: "+ fare.getPrice() + "\nSale: " + fare.getSaleRatio() + "\nEUR/Km: " + fare.getDealRatio());
 		
-		
-			//for the existing custom fields we get their IDs
-		HashMap<String,Integer> CFMap = getCustomFieldIDs (fare.getPortalPostID());
 		
 			// we set new value for custom field ID
 		

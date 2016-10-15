@@ -580,6 +580,7 @@ public class FareScraper {
      		if (nNode.getNodeType() == Node.ELEMENT_NODE) 
      		{
      			Element eElement = (Element) nNode;
+     			//TODO Null pointer exception
      			int price = Integer.parseInt(eElement.getElementsByTagName("price").item(0).getTextContent());
      			String originIata = eElement.getElementsByTagName("flyFrom").item(0).getTextContent();
      			String destinationIata = eElement.getElementsByTagName("flyTo").item(0).getTextContent();

@@ -284,64 +284,65 @@ public class Publisher {
 		
 		
 			// we set new value for custom field ID
-		
-		 //custom fields....	      
-	      List<Hashtable> customFieldsList = new ArrayList<Hashtable>();
-	      
-	      Hashtable customFields = new Hashtable();
-	      if (CFMap.containsKey("origin"))
-	    	  customFields.put("id", CFMap.get("origin"));
-	      customFields.put("key", "origin");
-	      customFields.put("value", fare.getOrigin().getCityName() + " (" + fare.getOrigin().getCountry() + ")" );
-	      customFieldsList.add(customFields);
-	      
-	      customFields = new Hashtable();
-	      if (CFMap.containsKey("destination"))
-	    	  customFields.put("id", CFMap.get("destination"));
-	      customFields.put("key", "destination");
-	      customFields.put("value", fare.getDestination().getCityName() + " (" + fare.getDestination().getCountry() + ")");
-	      customFieldsList.add(customFields);
-	      
-	      //----Date format definition------
-	      SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy (E)");
-	      
-	      customFields = new Hashtable();
-	      if (CFMap.containsKey("outboundDate"))
-	    	  customFields.put("id", CFMap.get("outboundDate"));
-	      customFields.put("key", "outboundDate");
-	      customFields.put("value", dateFormat.format(fare.getOutboundLeg()));
-	      customFieldsList.add(customFields);
-	      
-	      customFields = new Hashtable();
-	      if (CFMap.containsKey("inboundDate"))
-	    	  customFields.put("id", CFMap.get("inboundDate"));
-	      customFields.put("key", "inboundDate");
-	      customFields.put("value", dateFormat.format(fare.getInboundLeg()));
-	      customFieldsList.add(customFields);
-	      
-	      customFields = new Hashtable();
-	      if (CFMap.containsKey("price"))
-	    	  customFields.put("id", CFMap.get("price"));
-	      customFields.put("key", "price");
-	      customFields.put("value", fare.getPrice());
-	      customFieldsList.add(customFields);
-	      
-	      customFields = new Hashtable();
-	      if (CFMap.containsKey("sale"))
-	    	  customFields.put("id", CFMap.get("sale"));
-	      customFields.put("key", "sale");
-	      customFields.put("value", fare.getSaleRatio());
-	      customFieldsList.add(customFields);
-	      
-	      customFields = new Hashtable();
-	      if (CFMap.containsKey("bookingURL"))
-	    	  customFields.put("id", CFMap.get("bookingURL"));
-	      customFields.put("key", "bookingURL");
-	      customFields.put("value", fare.getBookingURL());
-	      customFieldsList.add(customFields);
-	      
-	      post.put("custom_fields", customFieldsList);
-	      
+		if (!newStatus.equals ("expired"))	
+				{
+					 //custom fields....	      
+				      List<Hashtable> customFieldsList = new ArrayList<Hashtable>();
+				      
+				      Hashtable customFields = new Hashtable();
+				      if (CFMap.containsKey("origin"))
+				    	  customFields.put("id", CFMap.get("origin"));
+				      customFields.put("key", "origin");
+				      customFields.put("value", fare.getOrigin().getCityName() + " (" + fare.getOrigin().getCountry() + ")" );
+				      customFieldsList.add(customFields);
+				      
+				      customFields = new Hashtable();
+				      if (CFMap.containsKey("destination"))
+				    	  customFields.put("id", CFMap.get("destination"));
+				      customFields.put("key", "destination");
+				      customFields.put("value", fare.getDestination().getCityName() + " (" + fare.getDestination().getCountry() + ")");
+				      customFieldsList.add(customFields);
+				      
+				      //----Date format definition------
+				      SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy (E)");
+				      
+				      customFields = new Hashtable();
+				      if (CFMap.containsKey("outboundDate"))
+				    	  customFields.put("id", CFMap.get("outboundDate"));
+				      customFields.put("key", "outboundDate");
+				      customFields.put("value", dateFormat.format(fare.getOutboundLeg()));
+				      customFieldsList.add(customFields);
+				      
+				      customFields = new Hashtable();
+				      if (CFMap.containsKey("inboundDate"))
+				    	  customFields.put("id", CFMap.get("inboundDate"));
+				      customFields.put("key", "inboundDate");
+				      customFields.put("value", dateFormat.format(fare.getInboundLeg()));
+				      customFieldsList.add(customFields);
+				      
+				      customFields = new Hashtable();
+				      if (CFMap.containsKey("price"))
+				    	  customFields.put("id", CFMap.get("price"));
+				      customFields.put("key", "price");
+				      customFields.put("value", fare.getPrice());
+				      customFieldsList.add(customFields);
+				      
+				      customFields = new Hashtable();
+				      if (CFMap.containsKey("sale"))
+				    	  customFields.put("id", CFMap.get("sale"));
+				      customFields.put("key", "sale");
+				      customFields.put("value", fare.getSaleRatio());
+				      customFieldsList.add(customFields);
+				      
+				      customFields = new Hashtable();
+				      if (CFMap.containsKey("bookingURL"))
+				    	  customFields.put("id", CFMap.get("bookingURL"));
+				      customFields.put("key", "bookingURL");
+				      customFields.put("value", fare.getBookingURL());
+				      customFieldsList.add(customFields);
+				      
+				      post.put("custom_fields", customFieldsList);
+	}
 	      
 	      
 	      List<String> categories = new ArrayList<String>();
@@ -351,7 +352,7 @@ public class Publisher {
 	    	  categories.add("ExpiredDeals"); 
 	      
 	      taxonomies.put("category", categories);
-	      
+	      post.put("terms_names", taxonomies);
 	      
 	      params.addElement(post);
 	          

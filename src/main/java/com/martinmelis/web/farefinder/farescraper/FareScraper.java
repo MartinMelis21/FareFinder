@@ -74,8 +74,8 @@ public class FareScraper {
 	final String addAirportSQL = 			"INSERT INTO Airports (iataFaa, airportName, airportCity, airportCountry, latitude, longtitude, altitude, icao) values (?, ?, ?, ?, ?, ?, ?, ?)";
 	final String updateSSIDSQL = 			"UPDATE Airports SET SkyScannerID = ? WHERE iataFaa = ?";
 	final String checkFareExistance = 		"SELECT numberOfAccountedPricesRoundTrip, averagePriceRoundTrip FROM Fares WHERE origin = (SELECT airportID FROM Airports WHERE iataFaa = ?) AND destination = (SELECT airportID FROM Airports WHERE iataFaa = ?)";
-	final String updateRoutePrice = 		"UPDATE Fares SET numberOfAccountedPricesRoundTrip = ?,lastAccountedPriceRoundTrip = ?,lastAccountedPriceTimeRoundTrip = NOW(),averagePriceRoundTrip = ?,isPublished = ?,outboundDate = ?,inboundDate = ? WHERE origin=(SELECT airportID FROM Airports WHERE iataFaa = ?) AND destination = (SELECT airportID FROM Airports WHERE iataFaa = ?)";
-	final String insertRoutePrice = 		"INSERT INTO Fares (origin,destination,lastAccountedPriceTimeRoundTrip,lastAccountedPriceRoundTrip,numberOfAccountedPricesRoundTrip,averagePriceRoundTrip,isPublished,outboundDate,inboundDate)VALUES ((SELECT airportID FROM Airports WHERE iataFaa = ?),(SELECT airportID FROM Airports WHERE iataFaa = ?),NOW(),?,1,?,?,?,?);";
+	final String updateRoutePrice = 		"UPDATE Fares SET numberOfAccountedPricesRoundTrip = ?,lastAccountedPriceRoundTrip = ?,lastAccountedPriceTimeRoundTrip = NOW(),averagePriceRoundTrip = ?,outboundDate = ?,inboundDate = ? WHERE origin=(SELECT airportID FROM Airports WHERE iataFaa = ?) AND destination = (SELECT airportID FROM Airports WHERE iataFaa = ?)";
+	final String insertRoutePrice = 		"INSERT INTO Fares (origin,destination,lastAccountedPriceTimeRoundTrip,lastAccountedPriceRoundTrip,numberOfAccountedPricesRoundTrip,averagePriceRoundTrip,outboundDate,inboundDate)VALUES ((SELECT airportID FROM Airports WHERE iataFaa = ?),(SELECT airportID FROM Airports WHERE iataFaa = ?),NOW(),?,1,?,?,?);";
 	final String getSSIDMapping =			"SELECT airportID,SkyScannerID FROM Airports";
 	final String getIataMapping =			"SELECT airportID,iataFaa FROM Airports";
 	final String updateFarePublication =	"UPDATE Fares SET lastFareNotification = NOW(),portalPostID = ?,portalPostStatus = ? WHERE origin = ? and destination = ? ";
@@ -401,11 +401,22 @@ public class FareScraper {
 			    	     					catch (Exception e)
 			    	     					{}			     						
 			     					}
-		    	     			}
+			     					// new fare is posted on portal
+			     					
 			     					if (fare.getIsNew())
-					     				insertDatabaseFare (fare,true);
+					     				insertDatabaseFare (fare);
 					     			else
-					     				updateDatabaseFare(fare,true);
+					     				updateDatabaseFare(fare);
+		    	     			}
+		    	     			else
+		    	     			{
+		    	     				// fare is updated but not posted to portal
+		    	     				
+			     					if (fare.getIsNew())
+					     				insertDatabaseFare (fare);
+					     			else
+					     				updateDatabaseFare(fare);
+		    	     			}
 		     				}	
 		     				//fare is not interesting but is published ... we set to expired
 		     				else
@@ -421,9 +432,9 @@ public class FareScraper {
 		     					{}
 		     						     						
 	     						if (fare.getIsNew())
-				     				insertDatabaseFare (fare,true);
+				     				insertDatabaseFare (fare);
 				     			else
-				     				updateDatabaseFare(fare,true);
+				     				updateDatabaseFare(fare);
 		     				}
 	     				}
 	     			//fare is not published
@@ -467,12 +478,20 @@ public class FareScraper {
 			     					
 			     				}
 	    	     			}
-			     			//--------------------------------------		     				
+			     			//--------------------------------------
+	    	     			
+	    	     			if (fare.getIsNew())
+			     				insertDatabaseFare (fare);
+			     			else
+			     				updateDatabaseFare(fare);
 	     				}	
-	     				if (fare.getIsNew())
-		     				insertDatabaseFare (fare,false);
-		     			else
-		     				updateDatabaseFare(fare,false);
+	     				else
+	     				{
+		     				if (fare.getIsNew())
+			     				insertDatabaseFare (fare);
+			     			else
+			     				updateDatabaseFare(fare);
+	     				}
 	     			}	
 	     			
 	     		}
@@ -1108,7 +1127,7 @@ public class FareScraper {
  			return fare;
 		}	
 		
-	public void updateDatabaseFare(RoundTripFare fare, boolean isPublished) throws SQLException
+	public void updateDatabaseFare(RoundTripFare fare) throws SQLException
 		{
  			PreparedStatement ps = null;
  			Integer numberOfAccountedPricesRoundTrip = fare.getNumberOfAccountedPricesRoundTrip();
@@ -1125,14 +1144,10 @@ public class FareScraper {
 			ps.setInt(1, numberOfAccountedPricesRoundTrip);
 			ps.setInt(2, lastAccountedPriceRoundTrip);
 			ps.setDouble(3, newAveragePriceRoundTrip);
-			ps.setString(5, fare.getOrigin().getIataFaa().toUpperCase());
-			ps.setString(6, fare.getDestination().getIataFaa().toUpperCase());
-			ps.setDate(7, new java.sql.Date(fare.getOutboundLeg().getTime()));
-			ps.setDate(8, new java.sql.Date(fare.getInboundLeg().getTime()));
-			if(isPublished == false)
-				ps.setInt(4,0);
-			else
-				ps.setInt(4,1);
+			ps.setString(4, fare.getOrigin().getIataFaa().toUpperCase());
+			ps.setString(5, fare.getDestination().getIataFaa().toUpperCase());
+			ps.setDate(6, new java.sql.Date(fare.getOutboundLeg().getTime()));
+			ps.setDate(7, new java.sql.Date(fare.getInboundLeg().getTime()));
 			
 			ps.executeUpdate();
 		}
@@ -1151,7 +1166,7 @@ public class FareScraper {
 		ps.executeUpdate();
 	}
 		
-	public void insertDatabaseFare(RoundTripFare fare, boolean isPublished) throws SQLException
+	public void insertDatabaseFare(RoundTripFare fare) throws SQLException
 		{
 			PreparedStatement ps = null;
 			
@@ -1160,14 +1175,8 @@ public class FareScraper {
 				ps.setString(2, fare.getDestination().getIataFaa().toUpperCase());
 				ps.setInt(3, fare.getPrice());
 				ps.setDouble(4, fare.getPrice());
-				
-				if(isPublished == false)
-					ps.setInt(5,0);
-				else
-					ps.setInt(5,1);
-				
-				ps.setDate(6, new java.sql.Date(fare.getOutboundLeg().getTime()));
-				ps.setDate(7, new java.sql.Date(fare.getInboundLeg().getTime()));
+				ps.setDate(5, new java.sql.Date(fare.getOutboundLeg().getTime()));
+				ps.setDate(6, new java.sql.Date(fare.getInboundLeg().getTime()));
 				
 				ps.executeUpdate();
 		}
@@ -1374,7 +1383,7 @@ public class FareScraper {
 							}
 						}	
 					}
-					updateDatabaseFare(fare,false);
+					updateDatabaseFare(fare);
 					}
 				}
 			

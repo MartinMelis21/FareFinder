@@ -300,7 +300,7 @@ public class FareScraper {
 		
 	}
 	
-	Integer getAndSetLivePrice (RoundTripFare fare) throws Exception
+	public Integer getAndSetLivePrice (RoundTripFare fare) throws Exception
 	{
 		Integer livePrice = null;
 		//---TODO new sources need to be added here---
@@ -350,12 +350,26 @@ public class FareScraper {
 			//-----------------------------------------------------
 			filteredFares = filterFares(fares);
 			
+			
+			
 			//TODO I also need to set all fares, which are not in current Deals list to be set to isPublished = 0
 						
 	     	for (int temp = 0; temp < filteredFares.size(); temp++) 
 	     		{
 	     		
 	     			RoundTripFare fare = filteredFares.get(temp);
+	     			
+	     			
+	     			
+	     			//--------------for FareFinder output------------------
+	     			if (fare.getOrigin().getZone() != fare.getDestination().getZone()  && fare.getPrice() <= 300 && fare.getSaleRatio() >= 30 && fare.getDealRatio() <= 0.04)
+     				{	
+	     				resultFares.add(fare);
+     				}	    			
+	    			//-----------------------------------------------------
+	    			
+	    			
+	    			
 	     			
 	     		//check if fare is published	     			
 	     			//fare is published
@@ -628,8 +642,7 @@ public class FareScraper {
      			
      			RoundTripFare fare = getRoundTripFare (originID, destinationID, price,outboundDate,inboundDate);
      			fare.setBookingURL("https://www.kiwi.com/us/booking?token=" + bookingToken);
-     			fares.add(fare);
-     			
+     			fares.add(fare);     			
      			
      			System.out.println("Outbound Leg\n\tFrom : " + fare.getOrigin().getCityName()  + " to " + fare.getDestination().getCityName() );
      			System.out.println("\tDate : " + fare.getOutboundLeg().toString());

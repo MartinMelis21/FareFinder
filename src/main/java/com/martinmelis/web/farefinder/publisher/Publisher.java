@@ -160,7 +160,7 @@ public class Publisher {
 	      
 	      Hashtable post = new Hashtable();
 	      post.put("post_title", fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());
-	      post.put("post_content","Price: "+ fare.getPrice() + "\nSale: " + fare.getSaleRatio() + "\nEUR/Km: " + fare.getDealRatio() + "\nURL: " + fare.getBookingURL());
+	      post.put("post_content","Price: "+ fare.getPrice() + "\nSale: " + fare.getSaleRatio() + "\nEUR/Km: " + fare.getDealRatio() + "\n<a href=\"fare.getBookingURL()\">URL</a>");
 		  post.put("post_status", "publish");
 	      post.put("post_thumbnail", mediaID.toString());
 	      post.put("comment_status", "open");
@@ -280,7 +280,7 @@ public class Publisher {
 		if (newStatus.equals("active"))
 			post.put("post_title",fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());	
 		if (newStatus.equals("updated") || newStatus.equals("active"))
-			post.put("post_content","Price: "+ fare.getPrice() + "\nSale: " + fare.getSaleRatio() + "\nEUR/Km: " + fare.getDealRatio() + "\nURL: " + fare.getBookingURL());
+			post.put("post_content","Price: "+ fare.getPrice() + "\nSale: " + fare.getSaleRatio() + "\nEUR/Km: " + fare.getDealRatio() + "\n<a href=\"fare.getBookingURL()\">URL</a>");
 		
 		
 			// we set new value for custom field ID

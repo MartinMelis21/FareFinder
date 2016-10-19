@@ -816,13 +816,17 @@ public class FareScraper {
             if (itinerariesList == null)
             	return null;
             
-            //TODO enforce order in HTTP request prior to this
             //I take the first one since the list is ordered
         	nNode = itinerariesList.item(0);
-        	        	
-        Double itineraryPrice = null;		
-    	String bookingURL = null;
+        	        
+    	if (nNode == null)
+        	return null;
     	
+    	Double itineraryPrice = null;		
+     	String bookingURL = null;
+     	
+    	
+    	//NUll pointer exception
         		if (nNode.getNodeType() == Node.ELEMENT_NODE) 
         		{
         			Element eElement = (Element) nNode;

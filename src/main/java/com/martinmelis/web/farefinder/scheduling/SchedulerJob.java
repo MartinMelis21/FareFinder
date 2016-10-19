@@ -104,8 +104,12 @@ public class SchedulerJob implements org.quartz.StatefulJob {
 	        
 	        
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			try {
+				conn.close();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
 		}
 		
 		System.out.println("Fares updated!");

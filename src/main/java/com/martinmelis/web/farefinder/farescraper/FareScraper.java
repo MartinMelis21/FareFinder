@@ -43,6 +43,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import com.martinmelis.web.farefinder.databaseHandler.DatabaseHandler;
 import com.martinmelis.web.farefinder.modules.MailSender;
 import com.martinmelis.web.farefinder.publisher.Publisher;
 
@@ -64,6 +65,7 @@ public class FareScraper {
 	private HashMap <Integer,AirportStructure> locationDictionary;
 	private HashMap <Integer,Integer> skyScannerIDMapping;
 	private HashMap <String,Integer> kiwiMapping;
+	private ArrayList <FareFetcher> fareFetcherList;
 	private ArrayList <String> accountedFares = null;
 	
 	StringBuffer finalResponse;
@@ -96,6 +98,7 @@ public class FareScraper {
 			mailSender = new MailSender ();
 			portalPublisher = new Publisher();
 			accountedFares = new ArrayList <String> ();
+			fareFetcherList = new ArrayList <FareFetcher> ();
 			
  		System.out.println("Last fares update:\t" + fmt.print(dt));	
 		finalResponse = new StringBuffer("Last fares update:\t" +fmt.print(dt));
@@ -235,7 +238,7 @@ public class FareScraper {
 
 	public String getFaresString (ArrayList <String> countryList, Connection conn) throws Exception
 	{
-		ArrayList<RoundTripFare> results = getFares(countryList,conn);
+		ArrayList<RoundTripFare> results = getFares(countryList);
 		
 		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd.MM.yyyy");
 		Calendar cal = Calendar.getInstance();		
@@ -280,77 +283,80 @@ public class FareScraper {
 		return sortedFares;
 		}
 	
-	public Integer getKiwiLivePrice (RoundTripFare fare) throws Exception
-	{
-		//hardcoded index of booking URL start
-		String bookingToken = fare.getBookingURL().substring(38);
-		String checkURL = "https://booking-api.skypicker.com/api/v0.1/check_flights?v=2&booking_token=" + bookingToken + "&bnum=0&pnum=1&currency=\"EUR\"";
-		String response = kiwiGetRequest(checkURL);	
-		
-		//total
-    	JSONObject obj = new JSONObject(response);
-    	Integer livePrice = (int) obj.getDouble("total");
-		
-    	if (livePrice != null && (livePrice < fare.getPrice() || livePrice < (fare.getPrice()*1.1)))    
-		{  		
-    		return livePrice.intValue();
-    	}
-		
-		return null;
-		
-	}
-	
-	public Integer getAndSetLivePrice (RoundTripFare fare) throws Exception
+	public Integer fetchLivePrice (ArrayList <FareFetcher> fetcherList, RoundTripFare fare) throws Exception
 	{
 		Integer livePrice = null;
+		FareFetcher fetcher = null;
 		//---TODO new sources need to be added here---
 		
 		//---SkyScanner fare---
-		if (fare.getBookingURL().equals("http://www.skyscanner.com"))
-			{
-				// If the live checked price is not in the limit we skip this fare
-				if ((livePrice = getSkyScannerLivePrice(fare))!=null)
-					return livePrice;
-				else
-					return null;
-			}
+			if (fare.getBookingURL().equals("http://www.skyscanner.com"))
+				{
+					for (FareFetcher fareFetcher:fetcherList)
+					{
+						if (fareFetcher instanceof SkyScannerFetcher)
+						{
+							fetcher = fareFetcher ;
+							break;
+						}
+					}
+				}
+		
 		//---Kiwi fare---
-		if (fare.getBookingURL().startsWith("https://www.kiwi.com"))
-		{
-			// If the live checked price is not in the limit we skip this fare
-			if ((livePrice = getKiwiLivePrice(fare))!=null)
-			{
-				fare.setPrice(livePrice);
-				return livePrice;
-			}
-			else
+				if (fare.getBookingURL().equals("https://www.kiwi.com"))
+					{
+						for (FareFetcher fareFetcher:fetcherList)
+						{
+							if (fareFetcher instanceof KiwiFetcher)
+							{
+								fetcher = fareFetcher ;
+								break;
+							}
+						}
+					}
+		
+		
+		//------return the fetched live price
+				
+				if (fetcher != null)
+				{
+					// If the live checked price is not in the limit we skip this fare
+					if ((livePrice =fetcher.getLivePrice(fare))!=null)
+						return livePrice;
+				}
 				return null;
-		}
-			
-		return null;
 	}
 	
-	public ArrayList<RoundTripFare> getFares(ArrayList <String> countryList, Connection conn) throws Exception {
+	public ArrayList<RoundTripFare> getFares(ArrayList <String> countryList) throws Exception {
 		
-		this.conn=conn;
+		DatabaseHandler databaseHandler = new DatabaseHandler();
+		databaseHandler.connectDatabase();
+		
+		//-----------------TODO new architecture-------------------
+		FareFetcher skyScannerFetcher = new SkyScannerFetcher (databaseHandler);
+		FareFetcher kiwiFetcher = new KiwiFetcher (databaseHandler);
+		
+		fareFetcherList.add(skyScannerFetcher);
+		fareFetcherList.add(kiwiFetcher);
+		
+		//--------------------------------------------------------
+		
+		ArrayList<RoundTripFare> fares= new ArrayList <RoundTripFare> ();
 		ArrayList<RoundTripFare> filteredFares = new ArrayList<RoundTripFare> ();
 		ArrayList<RoundTripFare> resultFares = new ArrayList<RoundTripFare> ();
 		
 				
 		for (String origin: countryList)
 		{
-			ArrayList<RoundTripFare> 	faresSS =		 	getFareListSS (origin);
-			ArrayList<RoundTripFare> 	faresKiwi = 		getFareListKiwi (origin);
-	        
 			
-			ArrayList<RoundTripFare> 	fares= new ArrayList <RoundTripFare> ();
-			fares.addAll(faresSS);
-			fares.addAll(faresKiwi);
+			for (FareFetcher fareFetcher : fareFetcherList)
+			{
+				fares.addAll(fareFetcher.getFareList(origin));
+			}
+	        
 						
 			//-----------------------------------------------------
-			filteredFares = filterFares(fares);
-			
-			
+		filteredFares = filterFares(fares);
 			
 			//TODO I also need to set all fares, which are not in current Deals list to be set to isPublished = 0
 						
@@ -379,7 +385,7 @@ public class FareScraper {
 		     				// fare is published and interesting..to save on calls we only call those we expect to be good
 		     				if (fare.getOrigin().getZone() != fare.getDestination().getZone()  && fare.getPrice() <= 300 && fare.getSaleRatio() >= 30 && fare.getDealRatio() <= 0.04)
 		     				{		  
-		     					Integer livePrice = getAndSetLivePrice (fare);  
+		     					Integer livePrice = fetchLivePrice (fareFetcherList,fare);  
 		     					// We were unable to register updated fare price or the live gathered price is not interesting
 		    	     			if (livePrice != null && livePrice < 300 && ((fare.getBaseFare()* 0.7)/livePrice >= 1 ) && fare.getDealRatio() <= 0.04)
 		    	     			{
@@ -395,7 +401,7 @@ public class FareScraper {
 				     						try{
 				     							portalPublisher.updateFareOnPortal(fare,"updated");
 				     							fare.setPortalPostStatus("updated");
-				     							updateFarePublication (fare);
+				     							databaseHandler.updateFarePublication (fare);
 				     						}
 				     						catch (Exception e)
 				     						{}		     					
@@ -409,7 +415,7 @@ public class FareScraper {
 			    	     					{
 			     								portalPublisher.updateFareOnPortal(fare,"active");
 				     							fare.setPortalPostStatus("active");
-				     							updateFarePublication (fare);		    		     					
+				     							databaseHandler.updateFarePublication (fare);		    		     					
 			    		     					
 			    	     					}
 			    	     					catch (Exception e)
@@ -418,18 +424,18 @@ public class FareScraper {
 			     					// new fare is posted on portal
 			     					
 			     					if (fare.getIsNew())
-					     				insertDatabaseFare (fare);
+			     						databaseHandler.insertDatabaseFare (fare);
 					     			else
-					     				updateDatabaseFare(fare);
+					     				databaseHandler.updateDatabaseFare(fare);
 		    	     			}
 		    	     			else
 		    	     			{
 		    	     				// fare is updated but not posted to portal
 		    	     				
 			     					if (fare.getIsNew())
-					     				insertDatabaseFare (fare);
+			     						databaseHandler.insertDatabaseFare (fare);
 					     			else
-					     				updateDatabaseFare(fare);
+					     				databaseHandler.updateDatabaseFare(fare);
 		    	     			}
 		     				}	
 		     				//fare is not interesting but is published ... we set to expired
@@ -440,15 +446,15 @@ public class FareScraper {
 		     					{
 		     						portalPublisher.updateFareOnPortal(fare,"expired");
 	     							fare.setPortalPostStatus("expired");
-	     							updateFarePublication (fare);
+	     							databaseHandler.updateFarePublication (fare);
 		     					}
 		     					catch (Exception e)
 		     					{}
 		     						     						
 	     						if (fare.getIsNew())
-				     				insertDatabaseFare (fare);
+	     							databaseHandler.insertDatabaseFare (fare);
 				     			else
-				     				updateDatabaseFare(fare);
+				     				databaseHandler.updateDatabaseFare(fare);
 		     				}
 	     				}
 	     			//fare is not published
@@ -459,7 +465,7 @@ public class FareScraper {
 	     				if (fare.getOrigin().getZone() != fare.getDestination().getZone()  && fare.getPrice() <= 300 && fare.getSaleRatio() >= 30 && fare.getDealRatio() <= 0.04)
 	     				{
 	     					
-	     					Integer livePrice = getAndSetLivePrice (fare);
+	     					Integer livePrice = fetchLivePrice (fareFetcherList,fare);
 	    	     			
 	    	     			// We were unable to register updated fare price
 	    	     			if (livePrice != null && livePrice < 300 && ((fare.getBaseFare()* 0.7)/livePrice >= 1 ) && fare.getDealRatio() <= 0.04)
@@ -468,7 +474,7 @@ public class FareScraper {
 		     					{
 		     						fare.setPortalPostStatus("active");
 		     						portalPublisher.publishFareToPortal(fare);
-			     					updateFarePublication (fare);
+		     						databaseHandler.updateFarePublication (fare);
 		     					}
 		     					catch (Exception e)
 		     					{}
@@ -495,16 +501,16 @@ public class FareScraper {
 			     			//--------------------------------------
 	    	     			
 	    	     			if (fare.getIsNew())
-			     				insertDatabaseFare (fare);
+	    	     				databaseHandler.insertDatabaseFare (fare);
 			     			else
-			     				updateDatabaseFare(fare);
+			     				databaseHandler.updateDatabaseFare(fare);
 	     				}	
 	     				else
 	     				{
 		     				if (fare.getIsNew())
-			     				insertDatabaseFare (fare);
+		     					databaseHandler.insertDatabaseFare (fare);
 			     			else
-			     				updateDatabaseFare(fare);
+			     				databaseHandler.updateDatabaseFare(fare);
 	     				}
 	     			}	
 	     			
@@ -513,740 +519,11 @@ public class FareScraper {
 		
 		//we need to check all published fares, that were not accounted in resultFares
 		//TODO analyzeResidualFares(resultFares);
-		
+		databaseHandler.disconnectDatabse();
 		return sortFares(resultFares);
-	}
-	
-	public ArrayList <RoundTripFare> getFareListSS (String origin) throws Exception
-	{
-		ArrayList<RoundTripFare> fares = new ArrayList<RoundTripFare>();
-		createSkyScannerMapping();
-		String fetchedFares = fetchFaresSS(origin);		
-	
-	 try {	
-         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-         Document doc = dBuilder.parse(new InputSource(new StringReader(fetchedFares)));
-         doc.getDocumentElement().normalize();
-         
-         
-         NodeList locationList = doc.getElementsByTagName("PlaceDto");
-         NodeList quoteList = doc.getElementsByTagName("QuoteDto");
-         Integer originID;
-      	 Integer destinationID;
-
-         
-     	for (int temp = 0; temp < quoteList.getLength(); temp++) 
-     	{
-     		Node nNode = quoteList.item(temp);
-     				
-     		if (nNode.getNodeType() == Node.ELEMENT_NODE) 
-     		{
-     			Element eElement = (Element) nNode;     			
-     			int price = Integer.parseInt(eElement.getElementsByTagName("MinPrice").item(0).getTextContent());
-     			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-     			String outboundDateString = ((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent();
-     			String inboundDateString = ((Element) eElement.getElementsByTagName("InboundLeg").item(0)).getElementsByTagName("DepartureDate").item(0).getTextContent();
-     			
-     			Date outboundDate = 	df.parse(outboundDateString);
-     			Date inboundDate = 		df.parse(inboundDateString);
-     			 
-     			
-     			int originSSID =		Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("OriginId").item(0).getTextContent());
-     			int destinationSSID = 	Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DestinationId").item(0).getTextContent());
-     			//TODO need to get SkyScanner booking URL
-     			
-     			
-     			if ((originID = skyScannerIDMapping.get(originSSID)) == null)
-     				// I update SSID to database
-     				originID = updateSSID(locationList, originSSID, conn);
-     			if ((destinationID = skyScannerIDMapping.get(destinationSSID)) == null)
-     				// I update SSID to databse
-     				destinationID = updateSSID(locationList, destinationSSID, conn);     			
-     			
-     			RoundTripFare fare = 	getRoundTripFare (originID,destinationID,price,outboundDate,inboundDate);
-     			fare.setBookingURL("http://www.skyscanner.com");
-     			fares.add(fare);
-     			   			
-
-     			System.out.println("Outbound Leg\n\tFrom : " + fare.getOrigin().getCityName()  + " to " + fare.getDestination().getCityName() );
-     			System.out.println("\tDate : " + fare.getOutboundLeg().toString());
-     			System.out.println("Inbound Leg\n\tFrom : " + fare.getDestination().getCityName()  + " to " + fare.getOrigin().getCityName() );
-     			System.out.println("\tDate : " + fare.getInboundLeg().toString());
-     			System.out.println("Price : " + fare.getPrice());
-     			System.out.println("Average price on this route : " + fare.getBaseFare());
-     			System.out.println("Sale : " + fare.getSaleRatio());
-     			System.out.println("DealRatio : " + fare.getDealRatio());
-     			System.out.println("Booking URL : " + fare.getBookingURL());
-     			System.out.println ();
-     		}
-         }
-      } catch (Exception e) {
-         e.printStackTrace();
-      }			
-		return fares;
+	}			
 		
-	}
-		
-	public ArrayList <RoundTripFare> getFareListKiwi (String origin) throws Exception
-	{
-		ArrayList<RoundTripFare> fares = new ArrayList<RoundTripFare>();
-		creatKiwiMapping ();
-		String fetchURL = "https://api.skypicker.com/flights?flyFrom="+origin+"&typeFlight=return&xml=1&oneforcity=1&limit=200";
-		String fetchedFares = kiwiGetRequest(fetchURL);		
-	
-	 try {	
-         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-         Document doc = dBuilder.parse(new InputSource(new StringReader(fetchedFares)));
-         doc.getDocumentElement().normalize();
-         
-         
-         NodeList quoteList = doc.getElementsByTagName("data");
-         Integer originID = null;
-         Integer destinationID = null;
-         
-     	for (int temp = 0; temp < quoteList.getLength(); temp++) 
-     	{
-     		Node nNode = quoteList.item(temp);
-     				
-     		if (nNode.getNodeType() == Node.ELEMENT_NODE) 
-     		{
-     			Element eElement = (Element) nNode;
-     			//TODO Null pointer exception
-     			int price = Integer.parseInt(eElement.getElementsByTagName("price").item(0).getTextContent());
-     			String originIata = eElement.getElementsByTagName("flyFrom").item(0).getTextContent();
-     			String destinationIata = eElement.getElementsByTagName("flyTo").item(0).getTextContent();
-     			String bookingToken = eElement.getElementsByTagName("booking_token").item(0).getTextContent();
-     			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss");     			
-     			
-     			String outboundDateString = ((Element) eElement.getElementsByTagName("route").item(0)).getElementsByTagName("aTime").item(0).getTextContent();
-     			String inboundDateString =  ((Element) eElement.getElementsByTagName("route").item(1)).getElementsByTagName("aTime").item(0).getTextContent();
-     			
-     			Date outboundDate = 	df.parse(outboundDateString);
-     			Date inboundDate = 		df.parse(inboundDateString);
-     			
-     			
-     			if ((originID = kiwiMapping.get(originIata)) == null)
-     				// I update SSID to database
-     			{
-     				AirportStructure newAirport = accountNewAirport(originIata.toUpperCase());
-     				originID = insertAirport(newAirport, conn);
-     			}
-     			if ((destinationID = kiwiMapping.get(destinationIata)) == null)
-     				// I update SSID to databse
-     			{
-     				AirportStructure newAirport = accountNewAirport(destinationIata.toUpperCase());
-     				destinationID = insertAirport(newAirport, conn);
-     			}
-     			
-     			RoundTripFare fare = getRoundTripFare (originID, destinationID, price,outboundDate,inboundDate);
-     			fare.setBookingURL("https://www.kiwi.com/us/booking?token=" + bookingToken);
-     			fares.add(fare);     			
-     			
-     			System.out.println("Outbound Leg\n\tFrom : " + fare.getOrigin().getCityName()  + " to " + fare.getDestination().getCityName() );
-     			System.out.println("\tDate : " + fare.getOutboundLeg().toString());
-     			System.out.println("Inbound Leg\n\tFrom : " + fare.getOrigin().getCityName()  + " to " + fare.getDestination().getCityName() );
-     			System.out.println("\tDate : " + fare.getInboundLeg().toString());
-     			System.out.println("Price : " + fare.getPrice());
-     			System.out.println("Average price on this route : " + fare.getBaseFare());
-     			System.out.println("Sale : " + fare.getSaleRatio());
-     			System.out.println("DealRatio : " + fare.getDealRatio());
-     			System.out.println("Booking URL : " + fare.getBookingURL());
-     			System.out.println ();
-     		}
-         }
-      } catch (Exception e) {
-         e.printStackTrace();
-      }			
-		return fares;
-		
-	}
-	
-	public String skyScannerGetRequest (String ssURL) throws IOException
-	{
-		URL skyScannerObj = new URL(ssURL);
-		HttpURLConnection skyScannerCon = (HttpURLConnection) skyScannerObj.openConnection();
-		skyScannerCon.setRequestMethod("GET");
-		skyScannerCon.setRequestProperty("User-Agent", USER_AGENT);
-		skyScannerCon.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-		skyScannerCon.setRequestProperty("Accept", "application/xml");
-		skyScannerCon.setReadTimeout(0);
-		skyScannerCon.setConnectTimeout(0);
-		skyScannerCon.connect();
-		
-		//reading the response
-		BufferedReader in = new BufferedReader(new InputStreamReader(skyScannerCon.getInputStream()));
-		String inputLine;
-		StringBuffer response = new StringBuffer();
-				
-		while ((inputLine = in.readLine()) != null) {
-			response.append(inputLine);
-		}
-		in.close();
-		
-		skyScannerCon.disconnect();
-		
-		if (response.toString().equals(""))
-			System.out.print("");
-		
-		return response.toString();
-	}
-	
- 	public String fetchFaresSS(String origin) throws Exception {
-		
-		//-------Skyscanner API URL------
-		String skyScannerUrl = "http://partners.api.skyscanner.net/apiservices/browsequotes/v1.0/SK/EUR/en-US/"+origin+"/anywhere/anytime/anytime?apiKey=prtl6749387986743898559646983194";
-		String response = skyScannerGetRequest (skyScannerUrl);
-		return response.toString();
-	}
- 	
- 	public String skyScannerGetSessionKey (String ssURL, byte[] parameters) throws IOException
- 	{
- 		URL url = new URL(ssURL);
- 		HttpURLConnection skyScannerCon = (HttpURLConnection)url.openConnection();
- 		skyScannerCon.setRequestMethod("POST");
-        skyScannerCon.setRequestProperty("User-Agent", USER_AGENT);
-		skyScannerCon.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-		skyScannerCon.setRequestProperty("Accept", "application/xml");		
-		skyScannerCon.setRequestProperty("Content-Length", String.valueOf(parameters.length));
-		skyScannerCon.setDoOutput(true);
-		skyScannerCon.getOutputStream().write(parameters);
-		skyScannerCon.connect();
-		String sessionString = skyScannerCon.getHeaderField("Location");
-
-		skyScannerCon.disconnect();
-		return sessionString;
- 	}
- 	
- 	public Integer getSkyScannerLivePrice(RoundTripFare fare) throws Exception {
- 		
- 		String fareString = fare.getOrigin().getAirportID() + fare.getDestination().getAirportID() + fare.getOutboundLeg().toString() + fare.getInboundLeg().toString();
- 		if (!accountedFares.contains(fareString))
- 		{
- 			accountedFares.add(fareString);
- 		}
- 		else
- 		{
- 			System.out.print("");
- 		}
-		
- 		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		//setting up parameters
- 		Map<String, String> params = new LinkedHashMap<String, String>();
-        params.put("apiKey", SkyScannerAPIKey);
-        params.put("country", "DE");
-        params.put("currency", "EUR");
-        params.put("locale", "en-US");
-        params.put("originplace", fare.getOrigin().getIataFaa());
-        params.put("destinationplace", fare.getDestination().getIataFaa());
-        params.put("outbounddate", dateFormat.format(fare.getOutboundLeg()));
-        params.put("inbounddate", dateFormat.format(fare.getInboundLeg()));
-        params.put("locationschema", "iata");
-        params.put("cabinclass", "Economy");
-        params.put("adults", "1");
-        params.put("children", "0");
-        params.put("infants", "0");
-        params.put("groupPricing", "true");
-        
-        StringBuilder postData = new StringBuilder();
-        
-        for (Map.Entry<String,String> param : params.entrySet()) {
-            if (postData.length() != 0) postData.append('&');
-            postData.append(URLEncoder.encode(param.getKey(), "UTF-8"));
-            postData.append('=');
-            postData.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));
-        }
-        
-        byte[] postDataBytes = postData.toString().getBytes("UTF-8");
-        String sessionKey = skyScannerGetSessionKey ("http://partners.api.skyscanner.net/apiservices/pricing/v1.0?", postDataBytes);
- 		
-      //wait untill Skyscanner provides URL for session        
-        Node nNode = null;
-        String status = "UpdatesPending";
-        Document doc = null;
-        String itineraries = null;
-        Thread.sleep(1000);
-        int counter = 0;
-        
-      //TODO-------Polling via HTTP get------
-        
-        while (status.equals("UpdatesPending"))
-        {
-        counter++;
-        itineraries = skyScannerGetRequest (sessionKey +"?apiKey=" + SkyScannerAPIKey);
-        
-       // if (!reply.equals(""))
-        //{
-        //	skipStatus = false;
-        //	itineraries = reply;
-        //}
-        //else
-        //{
-        //	skipStatus = true;
-        	if (itineraries.equals(""))
-        		return null;
-        //}
-        
-        //We parse the price of the cheapest and compare if it is what we expect
-        
-        	
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            StringReader sr = new StringReader(itineraries);
-            InputSource is = new InputSource(sr);
-            try{
-            doc = dBuilder.parse(is);
-            }
-            catch(Exception e)
-            {
-            	System.out.print("");
-            }
-            
-            status = doc.getElementsByTagName("Status").item(0).getTextContent();
-            
-            if (status.equals("UpdatesPending"))
-            	System.out.print("");
-        }
-            
-            
-            NodeList itinerariesList = doc.getElementsByTagName("ItineraryApiDto");
-            
-            //in case provided session key doesnt work
-            if (itinerariesList == null)
-            	return null;
-            
-            //I take the first one since the list is ordered
-        	nNode = itinerariesList.item(0);
-        	        
-    	if (nNode == null)
-        	return null;
-    	
-    	Double itineraryPrice = null;		
-     	String bookingURL = null;
-     	
-    	
-    	//NUll pointer exception
-        		if (nNode.getNodeType() == Node.ELEMENT_NODE) 
-        		{
-        			Element eElement = (Element) nNode;
-        			itineraryPrice =	Double.parseDouble(((Element) eElement.getElementsByTagName("PricingOptionApiDto").item(0)).getElementsByTagName("Price").item(0).getTextContent());
-         			bookingURL = 	((Element) eElement.getElementsByTagName("PricingOptionApiDto").item(0)).getElementsByTagName("DeeplinkUrl").item(0).getTextContent();	
-        		}
-        
-				if (itineraryPrice != null && (itineraryPrice < fare.getPrice() || itineraryPrice < (fare.getPrice()*1.1)))    
-				{
-					fare.setBookingURL(bookingURL);
-					return itineraryPrice.intValue();
-				}
-				else
-					return null;
-	}
-
- 	public String kiwiGetRequest(String url) throws Exception {
- 			
- 			//-------Skyscanner API URL------
- 			String kiwiUrl = url;
- 			URL kiwiObj = new URL(kiwiUrl);
- 			HttpURLConnection kiwiCon = (HttpURLConnection) kiwiObj.openConnection();
- 			kiwiCon.setRequestMethod("GET");
- 			kiwiCon.setRequestProperty("User-Agent", USER_AGENT);
- 			kiwiCon.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
- 			kiwiCon.setRequestProperty("Accept", "application/xml");
- 			kiwiCon.connect();
- 			
- 			
- 			//reading the response
- 			BufferedReader in = new BufferedReader(new InputStreamReader(kiwiCon.getInputStream()));
- 			String inputLine;
- 			StringBuffer response = new StringBuffer();
-
- 			while ((inputLine = in.readLine()) != null) {
- 				response.append(inputLine);
- 			}
- 			in.close();
- 			
- 			kiwiCon.disconnect();
- 			return response.toString();
- 		}
- 			
-	public int insertAirport (AirportStructure airport, Connection conn) throws SQLException
-	{			
-			
-			Integer airportID = null;
-			
-			PreparedStatement ps = conn.prepareStatement(addAirportSQL);
-			ps.setString(1, airport.getIataFaa());
-			ps.setString(2, airport.getAirportName());
-			ps.setString(3, airport.getCityName());
-			ps.setString(4, airport.getCountry());
-			ps.setDouble(5, airport.getLatitude());
-			ps.setDouble(6, airport.getLongtitude());
-			ps.setDouble(7, airport.getAltitude());
-			ps.setString(8, airport.getIcao());
-			
-			ps.executeUpdate();
-			
-			ps = conn.prepareStatement(getAirportOnIataFaaSQL);
-			ps.setString(1, airport.getIataFaa());
-			ResultSet resultSet = ps.executeQuery();     		 			
-	 			
-			if (resultSet.next()) 	
-	 			{
-	 				airportID = resultSet.getInt(10); 
-	     			resultSet.close();
-	 			}
-			
-			airport.setAirportID(airportID);
-			
-			return airportID;
-	}
-		
-	public int updateSSID (NodeList locationList, int ssid, Connection conn) throws XPathExpressionException, IOException, ParserConfigurationException, SAXException, SQLException
-		{
-			
-			Integer airportID = null;
-			ResultSet resultSet;
-			
-		for (int temp = 0; temp < locationList.getLength(); temp++) {
-
-     		Node nNode = locationList.item(temp);
-     				
-     		if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-
-     			Element eElement = (Element) nNode;
-     			Node node = null;
-     			Integer placeID = null;
-     			String iataCode = "";
-     			
-     			
-     			
-     			if ((node = eElement.getElementsByTagName("PlaceId").item(0))!=null)
-     				placeID = Integer.parseInt(node.getTextContent());
-     			if ((node = eElement.getElementsByTagName("IataCode").item(0))!=null)
-     				iataCode = node.getTextContent().toUpperCase();
-     			
-     			if (placeID.equals(ssid))
-     			{
-     				PreparedStatement ps = conn.prepareStatement(updateSSIDSQL);
-     				ps.setInt(1, ssid);
-     				ps.setString(2, iataCode.toUpperCase());
-     				if (ps.executeUpdate()==0)
-     				{
-     					AirportStructure newAirport = accountNewAirport(iataCode.toUpperCase());
-						try {
-							airportID = insertAirport(newAirport, conn);
-						} catch (SQLException e) {
-							e.printStackTrace();
-							System.out.println(newAirport.getIataFaa());
-							System.out.println(newAirport.getAirportName());
-							System.out.println(newAirport.getCityName());
-							System.out.println(newAirport.getCountry());
-							System.out.println(newAirport.getLatitude());
-							System.out.println(newAirport.getLongtitude());
-							System.out.println(newAirport.getAltitude());
-							System.out.println(newAirport.getIcao());
-						}
-     				}
-     				else
-     				{
-     					ps = conn.prepareStatement(getAirportOnSSIDSQL);
-         				ps.setInt(1, ssid);
-     					resultSet = ps.executeQuery();     		 			
-     		 			if (resultSet.next()) 	
-     		 			{
-     		 				airportID = resultSet.getInt(10); 
-     		     			resultSet.close();
-     		 			}
-     				}
-     				
-     			}
-     			
-     		}
-			 			
-	}
-		
-		return airportID;
-	}
-			
-	public void createSkyScannerMapping() throws SQLException, XPathExpressionException, IOException, ParserConfigurationException, SAXException
-		{ 	
-			PreparedStatement ps = null;
-			ResultSet resultSet = null;
-						
-			
-			//first I collect mapping between SSID and Our Airport ID
-			if (skyScannerIDMapping == null)
-			{
-				skyScannerIDMapping = new HashMap <Integer, Integer> ();
-				
-				
-				ps = conn.prepareStatement(getSSIDMapping);
-				resultSet = ps.executeQuery();
-				
-				Integer AirportID = null;
-				Integer SSID = null;
-				
-				while (resultSet.next())
-				{
-					AirportID =					resultSet.getInt(1); 
-	     			SSID =						resultSet.getInt(2);
-					if (SSID != 0)
-					{
-						skyScannerIDMapping.put(SSID, AirportID);
-					}
-				}
-				
-			}
-		}
-		
-	public void creatKiwiMapping () throws SQLException, XPathExpressionException, IOException, ParserConfigurationException, SAXException
-		{ 	
-			PreparedStatement ps = null;
-			ResultSet resultSet = null;
-						
-			
-			//first I collect mapping between iataFaa and Our Airport ID
-			if (kiwiMapping == null)
-			{
-				kiwiMapping = new HashMap <String, Integer> ();
-				
-				
-				ps = conn.prepareStatement(getIataMapping);
-				resultSet = ps.executeQuery();
-				
-				Integer AirportID = null;
-				String iataFaa = null;
-				
-				while (resultSet.next())
-				{
-					AirportID =					resultSet.getInt(1); 
-					iataFaa =					resultSet.getString(2);
-					if (iataFaa != "" && iataFaa != null)
-					{
-						kiwiMapping.put(iataFaa, AirportID);
-					}
-				}
-				
-			}
-		}
-		
-	public RoundTripFare getRoundTripFare (Integer originID, Integer destinationID,Integer price, Date outbound, Date inbound) throws SQLException, XPathExpressionException, IOException, ParserConfigurationException, SAXException
-			{
-			
-			RoundTripFare fare;
-			AirportStructure origin;
-			AirportStructure destination;
-			PreparedStatement ps = null;
-			ResultSet resultSet = null;
-			
-					
- 			ps = conn.prepareStatement(getFareSQL);
- 			ps.setInt(1, originID);
- 			ps.setInt(2, destinationID);
- 			resultSet = ps.executeQuery();
- 			
- 			//database columns
- 			String originAirportName = 			null;
- 			String originCityName = 			null;
- 			String originCountry = 				null;
- 			Double originLatitude = 			null;
- 			Double originLongtitude = 			null;
- 			Double originAltitude = 			null;
- 			String originIcao=					null;
- 			String originIataFaa=				null;
- 			Integer originZone = 				null;
- 			String destinationAirportName = 	null;
- 			String destinationCityName = 		null;
- 			String destinationCountry = 		null;
- 			Double destinationLatitude = 		null;
- 			Double destinationLongtitude = 		null;
- 			Double destinationAltitude = 		null;
- 			String destinationIcao=				null;
- 			String destinationIataFaa=			null;
- 			Integer destinationZone = 			null;
- 			
- 			Integer numberOfPricesRoundTrip = 	null;
- 			Double averageAccountedPrice = 		(double)price;
- 			
- 			Integer originSSID =			 	null;
- 			Integer destinationSSID =		 	null;
- 			Date lastFareNotification=			null;
- 			Integer portalPostID=				null;
- 			String portalPostStatus = 			null;
- 			Integer lastAccountedPrice=			null;
- 			
- 			// In case we know such a fare and thus know all airports
- 			if (resultSet.next()) {  		     	
-     			originAirportName = 			resultSet.getString(1);
-     			originCityName = 				resultSet.getString(2);
-     			originCountry = 				resultSet.getString(3);
-     			originLatitude = 				resultSet.getDouble(4);
-     			originLongtitude = 				resultSet.getDouble(5);
-     			originIataFaa =					resultSet.getString(6);  
-     			originAltitude=					resultSet.getDouble(7); 
-     			originIcao=						resultSet.getString(8); 
-     			originZone =					resultSet.getInt(9); 
-     			
-     			destinationAirportName = 		resultSet.getString(10);
-     			destinationCityName = 			resultSet.getString(11);
-     			destinationCountry = 			resultSet.getString(12);
-     			destinationLatitude = 			resultSet.getDouble(13);
-     			destinationLongtitude = 		resultSet.getDouble(14);
-     			destinationIataFaa =			resultSet.getString(15);  
-     			destinationAltitude=			resultSet.getDouble(16); 
-     			destinationIcao=				resultSet.getString(17); 
-     			destinationZone =				resultSet.getInt(18); 
-     			
-     			lastAccountedPrice =			resultSet.getInt(19); 
-     			numberOfPricesRoundTrip =		resultSet.getInt(20);
-     			averageAccountedPrice =			resultSet.getDouble(21); 
-     			
-     			originSSID =					resultSet.getInt(22);
-     			destinationSSID =				resultSet.getInt(23);     			
-     			lastFareNotification =			resultSet.getDate(24);
-     			portalPostID=					resultSet.getInt(25); ;
-     			portalPostStatus = 				resultSet.getString(26);
-     			
-     			resultSet.close();
-     			
-     			//In this case I dont do any additional SQL calls     			
-     			if (locationDictionary.containsKey(originID))
-     				origin = locationDictionary.get(originID);
-     			else
-     			{
-     				origin = new AirportStructure(originAirportName,originCityName,originCountry,originLatitude,originLongtitude,originSSID,originIataFaa, originAltitude, originIcao,originZone,originID);
-     	 			locationDictionary.put(originID, origin);
-     			}
-     			
-     			if (locationDictionary.containsKey(destinationID))
-     				destination = locationDictionary.get(destinationID);
-     			else
-     			{
-     				destination = new AirportStructure(destinationAirportName,destinationCityName,destinationCountry,destinationLatitude,destinationLongtitude,destinationSSID,destinationIataFaa, destinationAltitude, destinationIcao,destinationZone,destinationID);
-     	 			locationDictionary.put(destinationID, destination);
-     			}
-     			
-     			fare = new RoundTripFare (origin, destination, price, outbound, inbound, averageAccountedPrice,numberOfPricesRoundTrip,lastFareNotification,portalPostID,portalPostStatus); 
-     			fare.setLastAccountedPrice (lastAccountedPrice);     			
- 			}
- 			// In case Fare is not accounted, either we know airports, but dont know fare, or we dont know one airport, or we dont know any of airports
- 			else
- 			{
- 				// In this case I need to do additional SQL calls
- 				origin = getAirportInfo (originID); 				
- 				destination = getAirportInfo (destinationID);		
- 				
- 				fare = new RoundTripFare (origin, destination, price, outbound, inbound, averageAccountedPrice,0,null,null,null); 
- 				fare.setLastAccountedPrice (price); 
-     			fare.setIsNew();
- 			}			
- 			return fare;
-		}	
-		
-	public void updateDatabaseFare(RoundTripFare fare) throws SQLException
-		{
- 			PreparedStatement ps = null;
- 			Integer numberOfAccountedPricesRoundTrip = fare.getNumberOfAccountedPricesRoundTrip();
- 			double averagePriceRoundTrip = fare.getBaseFare();
- 								
-     		if (numberOfAccountedPricesRoundTrip == 50000)
-				numberOfAccountedPricesRoundTrip = 30000;
-     		
-     		
-			double newAveragePriceRoundTrip = ((numberOfAccountedPricesRoundTrip*averagePriceRoundTrip)+(double)fare.getPrice())/(double)(numberOfAccountedPricesRoundTrip+1);
-			numberOfAccountedPricesRoundTrip++;
-			ps = conn.prepareStatement(updateRoutePrice);
-			int lastAccountedPriceRoundTrip = fare.getPrice();
-			ps.setInt(1, numberOfAccountedPricesRoundTrip);
-			ps.setInt(2, lastAccountedPriceRoundTrip);
-			ps.setDouble(3, newAveragePriceRoundTrip);
-			ps.setString(4, fare.getOrigin().getIataFaa().toUpperCase());
-			ps.setString(5, fare.getDestination().getIataFaa().toUpperCase());
-			ps.setDate(6, new java.sql.Date(fare.getOutboundLeg().getTime()));
-			ps.setDate(7, new java.sql.Date(fare.getInboundLeg().getTime()));
-			
-			ps.executeUpdate();
-		}
-	
-	public void updateFarePublication (RoundTripFare fare) throws SQLException {
-			
-		//this need to be done as separate SQL call, because when prices are updated, we still dont know if we publish
-		
-		PreparedStatement ps = null;
-		ps = conn.prepareStatement(updateFarePublication);
-		ps.setInt(1, fare.getPortalPostID());
-		ps.setString(2, fare.getPortalPostStatus());
-		ps.setInt(3, fare.getOrigin().getAirportID());
-		ps.setInt(4, fare.getDestination().getAirportID());
-		
-		ps.executeUpdate();
-	}
-		
-	public void insertDatabaseFare(RoundTripFare fare) throws SQLException
-		{
-			PreparedStatement ps = null;
-			
-				ps = conn.prepareStatement(insertRoutePrice);
-				ps.setString(1, fare.getOrigin().getIataFaa().toUpperCase());
-				ps.setString(2, fare.getDestination().getIataFaa().toUpperCase());
-				ps.setInt(3, fare.getPrice());
-				ps.setDouble(4, fare.getPrice());
-				ps.setDate(5, new java.sql.Date(fare.getOutboundLeg().getTime()));
-				ps.setDate(6, new java.sql.Date(fare.getInboundLeg().getTime()));
-				
-				ps.executeUpdate();
-		}
-			
-	public AirportStructure getAirportInfo (Integer airportID) throws SQLException, XPathExpressionException, IOException, ParserConfigurationException, SAXException
-		{ 	
-			if (locationDictionary.containsKey(airportID))
-			{
-				return locationDictionary.get(airportID);
-
-			} 			
- 			
- 			
- 			final PreparedStatement ps = conn.prepareStatement(getAirportOnIDSQL);
- 			ps.setInt(1, airportID);
- 			final ResultSet resultSet = ps.executeQuery();
- 			
- 			//database columns
- 			String airportName = 	null;
- 			String cityName = 		null;
- 			String country = 		null;
- 			Double latitude = 		null;
- 			Double longtitude = 	null;
- 			Double altitude = 		null;
- 			String icao=			null;
- 			String iataFaa=			null;
- 			Integer zone = 			null;
- 			Integer SSID = 			null;
- 			Integer id =			null;
- 			
- 			if (resultSet.next()) {  		     	
-     			airportName = 	resultSet.getString(1);
-     			cityName = 		resultSet.getString(2);
-     			country = 		resultSet.getString(3);
-     			latitude = 		resultSet.getDouble(4);
-     			longtitude = 	resultSet.getDouble(5);
-     			iataFaa =		resultSet.getString(6);  
-     			altitude=		resultSet.getDouble(7); 
-     			icao=			resultSet.getString(8); 
-     			zone =			resultSet.getInt(9); 
-     			id =			resultSet.getInt(10);
-     			SSID = 			resultSet.getInt(11);  
-     			
-     			resultSet.close();
- 			}
- 			
- 			AirportStructure airportStructure = new AirportStructure(airportName,cityName,country,latitude,longtitude,SSID,iataFaa, altitude, icao,zone,id);
- 			locationDictionary.put(airportID, airportStructure);
- 			
- 			return airportStructure;
-		}
-		
-	public void analyzeResidualFares (ArrayList<RoundTripFare> filteredFares) throws Exception 
+	public void analyzeResidualFares (ArrayList<RoundTripFare> filteredFares, DatabaseHandler databaseHandler) throws Exception 
 	{ 				
 			ArrayList <RoundTripFare> residualFares = new ArrayList <RoundTripFare> ();
 			final PreparedStatement ps = conn.prepareStatement(getResidualFares);
@@ -1370,7 +647,7 @@ public class FareScraper {
 						}
 	
 					
-					Integer livePrice = getAndSetLivePrice (fare);
+					Integer livePrice = fetchLivePrice (fareFetcherList,fare);
 					
 					if (livePrice == null || livePrice > 300 || fare.getSaleRatio() < 30)
 	 				{	
@@ -1378,7 +655,7 @@ public class FareScraper {
 	 					{
 	 						fare.setPortalPostStatus("expired");
 	     					portalPublisher.updateFareOnPortal(fare, "expired");     					
-	     					updateFarePublication (fare);
+	     					databaseHandler.updateFarePublication (fare);
 	 					}
 	 					catch (Exception e)
 	 					{}
@@ -1393,14 +670,14 @@ public class FareScraper {
 			 					{
 			 						fare.setPortalPostStatus("updated");
 			     					portalPublisher.updateFareOnPortal(fare, "updated");     					
-			     					updateFarePublication (fare);
+			     					databaseHandler.updateFarePublication (fare);
 			 					}
 			 					catch (Exception e)
 			 					{}
 							}
 						}	
 					}
-					updateDatabaseFare(fare);
+					databaseHandler.updateDatabaseFare(fare);
 					}
 				}
 			

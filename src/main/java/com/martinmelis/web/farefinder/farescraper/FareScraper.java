@@ -236,9 +236,9 @@ public class FareScraper {
 		return filteredFares;
 	}
 
-	public String getFaresString (ArrayList <String> countryList, Connection conn) throws Exception
+	public String getFaresString (ArrayList <String> countryList, DatabaseHandler databaseHandler) throws Exception
 	{
-		ArrayList<RoundTripFare> results = getFares(countryList);
+		ArrayList<RoundTripFare> results = getFares(countryList, databaseHandler);
 		
 		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd.MM.yyyy");
 		Calendar cal = Calendar.getInstance();		
@@ -327,10 +327,8 @@ public class FareScraper {
 				return null;
 	}
 	
-	public ArrayList<RoundTripFare> getFares(ArrayList <String> countryList) throws Exception {
+	public ArrayList<RoundTripFare> getFares(ArrayList <String> countryList, DatabaseHandler databaseHandler) throws Exception {
 		
-		DatabaseHandler databaseHandler = new DatabaseHandler();
-		databaseHandler.connectDatabase();
 		
 		//-----------------TODO new architecture-------------------
 		FareFetcher skyScannerFetcher = new SkyScannerFetcher (databaseHandler);
@@ -519,7 +517,6 @@ public class FareScraper {
 		
 		//we need to check all published fares, that were not accounted in resultFares
 		//TODO analyzeResidualFares(resultFares);
-		databaseHandler.disconnectDatabse();
 		return sortFares(resultFares);
 	}			
 		

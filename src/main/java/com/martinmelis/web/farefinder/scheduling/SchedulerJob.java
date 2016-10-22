@@ -24,14 +24,13 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import com.martinmelis.web.farefinder.databaseHandler.DatabaseHandler;
 import com.martinmelis.web.farefinder.farescraper.FareScraper;
 
 
 public class SchedulerJob implements org.quartz.StatefulJob {
 	
-		private ArrayList <String> origins;
-		private Connection conn;
-	
+		private ArrayList <String> origins;	
 
 	  public SchedulerJob() throws SQLException, ClassNotFoundException 
 	  {
@@ -57,26 +56,6 @@ public class SchedulerJob implements org.quartz.StatefulJob {
 			  	origins.add("UK");
 			  	origins.add("NL");
 			  	origins.add("BE");
-			  	
-			  	
-			  		
-			//-----------------connect to Database-----------------
-			    
-			    
-				Context initialContext=null;
-			    String dataResourceName = "jdbc/MySQLDS";
-				DataSource dataSource = null;
-				Context environmentContext = null;
-				try {
-					initialContext = new InitialContext();
-					environmentContext = (Context) initialContext.lookup("java:comp/env");
-					dataSource = (DataSource) environmentContext.lookup(dataResourceName);
-					conn = dataSource.getConnection();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}	    
-			
-		     //-------------------------------------------------
 	            
 		}
 	  
@@ -89,27 +68,23 @@ public class SchedulerJob implements org.quartz.StatefulJob {
 		 
 	       
 	    FareScraper fareScraper = null;
-	    BufferedWriter dataOut;
 	    String fares = "";
+	    
+	    DatabaseHandler databaseHandler = new DatabaseHandler();
+		databaseHandler.connectDatabase();
 	    
 		try {
 			fareScraper = new FareScraper();
-			fares = fareScraper.getFaresString(origins,conn);
+			fares = fareScraper.getFaresString(origins,databaseHandler);
 	        	        
 	        File faresFile = new File("fares.txt");
 	        FileWriter faresWriter = new FileWriter(faresFile, false); // true to append	                             
 	        faresWriter.write(fares);
 	        faresWriter.close();
-	        conn.close();
-	        
+	        databaseHandler.disconnectDatabse();
 	        
 		} catch (Exception e) {
-			e.printStackTrace();
-			try {
-				conn.close();
-			} catch (SQLException e1) {
-				e1.printStackTrace();
-			}
+			databaseHandler.disconnectDatabse();
 		}
 		
 		System.out.println("Fares updated!");

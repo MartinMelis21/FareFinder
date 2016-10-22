@@ -339,13 +339,13 @@ public class FareScraper {
 		
 		//--------------------------------------------------------
 		
-		ArrayList<RoundTripFare> fares= new ArrayList <RoundTripFare> ();
 		ArrayList<RoundTripFare> filteredFares = new ArrayList<RoundTripFare> ();
 		ArrayList<RoundTripFare> resultFares = new ArrayList<RoundTripFare> ();
 		
 				
 		for (String origin: countryList)
 		{
+			ArrayList<RoundTripFare> fares= new ArrayList <RoundTripFare> ();
 			
 			for (FareFetcher fareFetcher : fareFetcherList)
 			{

@@ -54,6 +54,8 @@ public class KayakFetcher extends FareFetcher {
 		Integer destinationID = null;
 		SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
 		SimpleDateFormat outputFormatter = new SimpleDateFormat("yyyy-MM-dd");
+		try {
+	    	creatMapping ();
 		
 		for (String originIata : origins)
 		{
@@ -67,12 +69,10 @@ public class KayakFetcher extends FareFetcher {
 			
 			//total
 	    	JSONObject obj = new JSONObject(response);
-	    	JSONArray destinations =  (JSONArray) obj.getJSONArray("destinations");
-	    	
+	    	JSONArray destinations =  (JSONArray) obj.getJSONArray("destinations");    	
 	    	for (int i=0;i<destinations.length();i++)
 	    	{
-	    		try {
-	    		creatMapping ();
+	 
 	    		JSONObject destination = (JSONObject) destinations.get(i);
 	    		Date outboundDate = df.parse((String) destination.get("depart"));
 	    		Date inboundDate = df.parse((String) destination.get("return"));
@@ -106,14 +106,17 @@ public class KayakFetcher extends FareFetcher {
      			System.out.println("Sale : " + fare.getSaleRatio());
      			System.out.println("DealRatio : " + fare.getDealRatio());
      			System.out.println("Booking URL : " + fare.getBookingURL());
-     			System.out.println ();
-	    		}
-	    		catch (Exception e)
-	    		{   			
-	    		}
-	    		
+     			System.out.println ();	    		
 	    	}
+	    	
 		}
+		
+		}
+		catch (Exception e)
+		{   
+			e.printStackTrace();
+		}
+		
 		return fares;
 	}
 

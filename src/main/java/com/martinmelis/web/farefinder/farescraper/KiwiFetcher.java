@@ -156,7 +156,7 @@ public class KiwiFetcher extends FareFetcher {
 				Integer AirportID = null;
 				String iataFaa = null;
 				
-				if (resultSet.next())
+				while (resultSet.next())
 				{
 					AirportID =					resultSet.getInt(1); 
 					iataFaa =					resultSet.getString(2);

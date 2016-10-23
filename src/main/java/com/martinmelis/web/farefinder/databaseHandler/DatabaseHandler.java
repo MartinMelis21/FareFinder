@@ -463,7 +463,12 @@ public class DatabaseHandler {
 			ps.setString(4, airport.getCountry());
 			ps.setDouble(5, airport.getLatitude());
 			ps.setDouble(6, airport.getLongtitude());
+			try{
 			ps.setDouble(7, airport.getAltitude());
+			}catch( Exception e)
+			{
+				e.printStackTrace();
+			}
 			ps.setString(8, airport.getIcao());
 			
 			ps.executeUpdate();

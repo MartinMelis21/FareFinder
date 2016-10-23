@@ -92,10 +92,14 @@ public class SkyScannerFetcher extends FareFetcher {
      			
      			if ((originID = databaseHandler.getCachingLists().getSkyScannerIDMapping().get(originSSID)) == null)
      				// I update SSID to database
+     			{
      				originID = databaseHandler.updateSSID(locationList, originSSID);
+     			}
      			if ((destinationID = databaseHandler.getCachingLists().getSkyScannerIDMapping().get(destinationSSID)) == null)
+     			{
      				// I update SSID to databse
-     				destinationID = databaseHandler.updateSSID(locationList, destinationSSID);     			
+     				destinationID = databaseHandler.updateSSID(locationList, destinationSSID);  
+     			}
      			
      			RoundTripFare fare = 	databaseHandler.getRoundTripFare (originID,destinationID,price,outboundDate,inboundDate);
      			fare.setBookingURL("http://www.skyscanner.com");
@@ -138,7 +142,7 @@ public class SkyScannerFetcher extends FareFetcher {
 			Integer AirportID = null;
 			Integer SSID = null;
 			
-			while (resultSet.next())
+			if (resultSet.next())
 			{
 				AirportID =					resultSet.getInt(1); 
      			SSID =						resultSet.getInt(2);

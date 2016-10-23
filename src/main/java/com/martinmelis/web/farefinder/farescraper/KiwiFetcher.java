@@ -83,12 +83,20 @@ public class KiwiFetcher extends FareFetcher {
      				// I update SSID to database
      			{
      				AirportStructure newAirport = databaseHandler.accountNewAirport(originIata.toUpperCase());
+     				
+     				if (newAirport == null)
+     					continue;
+     				
      				originID = databaseHandler.insertAirport(newAirport);
      			}
      			if ((destinationID = databaseHandler.getCachingLists().getIataFaaMapping().get(destinationIata)) == null)
      				// I update SSID to databse
      			{
      				AirportStructure newAirport = databaseHandler.accountNewAirport(destinationIata.toUpperCase());
+     				
+     				if (newAirport == null)
+     					continue;
+     				
      				destinationID = databaseHandler.insertAirport(newAirport);
      			}
      			

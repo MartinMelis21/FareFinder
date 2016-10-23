@@ -329,14 +329,6 @@ public class DatabaseHandler {
 						airportID = insertAirport(newAirport);
 					} catch (SQLException e) {
 						e.printStackTrace();
-						System.out.println(newAirport.getIataFaa());
-						System.out.println(newAirport.getAirportName());
-						System.out.println(newAirport.getCityName());
-						System.out.println(newAirport.getCountry());
-						System.out.println(newAirport.getLatitude());
-						System.out.println(newAirport.getLongtitude());
-						System.out.println(newAirport.getAltitude());
-						System.out.println(newAirport.getIcao());
 					}
  				}
  				else
@@ -448,7 +440,12 @@ public class DatabaseHandler {
 	if (name != null && latitude != null && longtitude != null)
 		return new AirportStructure(name, city, country, latitude, longtitude, null, iataCode, altitude, ICAO, zone,null);
 	else
+	{
+		System.out.println("Error by fetching information about airport " + iataCode);
 		return null;
+	}
+	
+	
 	}
 	
 	public int insertAirport (AirportStructure airport) throws SQLException

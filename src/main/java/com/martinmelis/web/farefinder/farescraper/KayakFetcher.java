@@ -83,10 +83,12 @@ public class KayakFetcher extends FareFetcher {
 	    		if ((originID = databaseHandler.getCachingLists().getIataFaaMapping().get(originIata)) == null)
      			{
      				AirportStructure newAirport = databaseHandler.accountNewAirport(originIata.toUpperCase());
+     				
      				if (newAirport == null)
      					continue;
      				
      				originID = databaseHandler.insertAirport(newAirport);
+     				databaseHandler.getCachingLists().getIataFaaMapping().put(originIata, originID);
      			}
      			if ((destinationID = databaseHandler.getCachingLists().getIataFaaMapping().get(destinationIata)) == null)
      				// I update SSID to databse
@@ -97,6 +99,7 @@ public class KayakFetcher extends FareFetcher {
      					continue;
      				
      				destinationID = databaseHandler.insertAirport(newAirport);
+     				databaseHandler.getCachingLists().getIataFaaMapping().put(destinationIata, destinationID);
      			}
      			
      			RoundTripFare fare = databaseHandler.getRoundTripFare (originID, destinationID, price,outboundDate,inboundDate);

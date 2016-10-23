@@ -94,11 +94,13 @@ public class SkyScannerFetcher extends FareFetcher {
      				// I update SSID to database
      			{
      				originID = databaseHandler.updateSSID(locationList, originSSID);
+     				databaseHandler.getCachingLists().getSkyScannerIDMapping().put(originSSID, originID);
      			}
      			if ((destinationID = databaseHandler.getCachingLists().getSkyScannerIDMapping().get(destinationSSID)) == null)
      			{
      				// I update SSID to databse
      				destinationID = databaseHandler.updateSSID(locationList, destinationSSID);  
+     				databaseHandler.getCachingLists().getSkyScannerIDMapping().put(destinationSSID, destinationID);
      			}
      			
      			RoundTripFare fare = 	databaseHandler.getRoundTripFare (originID,destinationID,price,outboundDate,inboundDate);

@@ -464,7 +464,9 @@ public class DatabaseHandler {
 			ps.setDouble(7, airport.getAltitude());
 			}catch( Exception e)
 			{
+				System.out.println("\n\nError inserting airport - airport.getIataFaa() ... no altitude\n\n");
 				e.printStackTrace();
+				ps.setNull(7, java.sql.Types.NULL);
 			}
 			ps.setString(8, airport.getIcao());
 			

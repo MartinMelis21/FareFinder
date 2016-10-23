@@ -14,12 +14,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
+import org.json.JSONObject;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 
-import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -34,11 +34,9 @@ import dataTypes.AirportStructure;
 import dataTypes.RoundTripFare;
 
 public class KiwiFetcher extends FareFetcher {
-	private HashMap <String,Integer> kiwiMapping;
 	private DatabaseHandler databaseHandler;
 	
 	public KiwiFetcher(DatabaseHandler databaseHandler) {
-		this.kiwiMapping = new HashMap <String,Integer> ();
 		this.databaseHandler=databaseHandler;
 	}
 
@@ -81,13 +79,13 @@ public class KiwiFetcher extends FareFetcher {
      			Date inboundDate = 		df.parse(inboundDateString);
      			
      			
-     			if ((originID = kiwiMapping.get(originIata)) == null)
+     			if ((originID = databaseHandler.getCachingLists().getIataFaaMapping().get(originIata)) == null)
      				// I update SSID to database
      			{
      				AirportStructure newAirport = databaseHandler.accountNewAirport(originIata.toUpperCase());
      				originID = databaseHandler.insertAirport(newAirport);
      			}
-     			if ((destinationID = kiwiMapping.get(destinationIata)) == null)
+     			if ((destinationID = databaseHandler.getCachingLists().getIataFaaMapping().get(destinationIata)) == null)
      				// I update SSID to databse
      			{
      				AirportStructure newAirport = databaseHandler.accountNewAirport(destinationIata.toUpperCase());
@@ -150,22 +148,24 @@ public class KiwiFetcher extends FareFetcher {
 			ResultSet resultSet = null;
 						
 			
-				
+			if (databaseHandler.getCachingLists().getIataFaaMapping().isEmpty())
+			{
 				ps = databaseHandler.getDatabaseConnection().prepareStatement(DatabaseQueries.getIataMapping);
 				resultSet = ps.executeQuery();
 				
 				Integer AirportID = null;
 				String iataFaa = null;
 				
-				while (resultSet.next())
+				if (resultSet.next())
 				{
 					AirportID =					resultSet.getInt(1); 
 					iataFaa =					resultSet.getString(2);
 					if (iataFaa != "" && iataFaa != null)
 					{
-						kiwiMapping.put(iataFaa, AirportID);
+						databaseHandler.getCachingLists().getIataFaaMapping().put(iataFaa, AirportID);
 					}
 				}
+			}
 				
 		}
 

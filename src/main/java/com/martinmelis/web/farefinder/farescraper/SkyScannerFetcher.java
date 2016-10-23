@@ -41,7 +41,6 @@ public class SkyScannerFetcher extends FareFetcher {
 	DatabaseHandler databaseHandler;
 	
 	private ArrayList <String> accountedFares;
-	private HashMap <Integer,Integer> skyScannerIDMapping;
 	private final static String SkyScannerAPIKey = "er894518990376063234868271076630";
 	
 
@@ -91,10 +90,10 @@ public class SkyScannerFetcher extends FareFetcher {
      			//TODO need to get SkyScanner booking URL
      			
      			
-     			if ((originID = skyScannerIDMapping.get(originSSID)) == null)
+     			if ((originID = databaseHandler.getCachingLists().getSkyScannerIDMapping().get(originSSID)) == null)
      				// I update SSID to database
      				originID = databaseHandler.updateSSID(locationList, originSSID);
-     			if ((destinationID = skyScannerIDMapping.get(destinationSSID)) == null)
+     			if ((destinationID = databaseHandler.getCachingLists().getSkyScannerIDMapping().get(destinationSSID)) == null)
      				// I update SSID to databse
      				destinationID = databaseHandler.updateSSID(locationList, destinationSSID);     			
      			
@@ -131,11 +130,8 @@ public class SkyScannerFetcher extends FareFetcher {
 					
 		
 		//first I collect mapping between SSID and Our Airport ID
-		if (skyScannerIDMapping == null)
-		{
-			skyScannerIDMapping = new HashMap <Integer, Integer> ();
-			
-			
+		if (databaseHandler.getCachingLists().getSkyScannerIDMapping().isEmpty())
+		{			
 			ps = databaseHandler.getDatabaseConnection().prepareStatement(DatabaseQueries.getSSIDMapping);
 			resultSet = ps.executeQuery();
 			
@@ -148,7 +144,7 @@ public class SkyScannerFetcher extends FareFetcher {
      			SSID =						resultSet.getInt(2);
 				if (SSID != 0)
 				{
-					skyScannerIDMapping.put(SSID, AirportID);
+					databaseHandler.getCachingLists().getSkyScannerIDMapping().put(SSID, AirportID);
 				}
 			}
 			

@@ -85,6 +85,7 @@ public class SchedulerJob implements org.quartz.StatefulJob {
 	        
 		} catch (Exception e) {
 			databaseHandler.disconnectDatabse();
+			e.printStackTrace();
 		}
 		
 		System.out.println("Fares updated!");

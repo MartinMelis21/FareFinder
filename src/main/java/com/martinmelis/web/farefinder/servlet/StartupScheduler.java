@@ -54,6 +54,7 @@ public class StartupScheduler extends HttpServlet {
 	}
 	
 	 public void init() {
+		 
 		    JobDetail job = new JobDetail();
 	    	job.setName("farescraping");
 	    	job.setJobClass(SchedulerJob.class);
@@ -86,4 +87,6 @@ public class StartupScheduler extends HttpServlet {
 				e.printStackTrace();
 			}
 		  }
+		  
+		  
 }

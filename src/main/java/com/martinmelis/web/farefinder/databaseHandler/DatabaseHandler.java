@@ -186,6 +186,11 @@ public class DatabaseHandler {
 		return fare;
 }	
 	
+	public CachingModule getCachingLists ()
+	{
+		return this.cachingModule;
+	}
+	
 	public void updateDatabaseFare(RoundTripFare fare) throws SQLException
 	{
 			PreparedStatement ps = null;
@@ -477,5 +482,23 @@ public class DatabaseHandler {
 			
 			return airportID;
 	}
+
+	public ArrayList <String> getOriginCountryAirports (String countryCode) throws SQLException
+	{
+		ArrayList <String> airportCodesList = new ArrayList <String>();
+		
+		final PreparedStatement ps = databaseConnection.prepareStatement(DatabaseQueries.getOriginAirports);
+		ps.setString(1, countryCode.toUpperCase());
+		final ResultSet resultSet = ps.executeQuery();
+		
+		while (resultSet.next()) {  		     	
+			airportCodesList.add(resultSet.getString(1).toUpperCase());
+		}
 	
+		if (airportCodesList.isEmpty())
+			return null;
+		else
+			return airportCodesList;
+		
+	}
 }

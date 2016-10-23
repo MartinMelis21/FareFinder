@@ -28,6 +28,7 @@ import javax.sql.DataSource;
 
 import com.martinmelis.web.farefinder.dao.*;
 import com.martinmelis.web.farefinder.farescraper.FareScraper;
+import com.martinmelis.web.farefinder.farescraper.KayakFetcher;
 import com.martinmelis.web.farefinder.publisher.Publisher;
 import com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
@@ -60,12 +61,7 @@ public class PostPublish extends HttpServlet{
 	  @Override
 	  protected void doGet(HttpServletRequest request,
 	     HttpServletResponse response) throws ServletException, IOException {
-	   try {
-		pb.deleteAllFaresOnPortal();
-	} catch (Exception e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}
+		  
 	  }
 	  
 	  	

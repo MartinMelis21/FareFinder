@@ -333,9 +333,11 @@ public class FareScraper {
 		//-----------------TODO new architecture-------------------
 		FareFetcher skyScannerFetcher = new SkyScannerFetcher (databaseHandler);
 		FareFetcher kiwiFetcher = new KiwiFetcher (databaseHandler);
+		FareFetcher kayakFetcher = new KayakFetcher (databaseHandler);
 		
 		fareFetcherList.add(skyScannerFetcher);
 		fareFetcherList.add(kiwiFetcher);
+		fareFetcherList.add(kayakFetcher);
 		
 		//--------------------------------------------------------
 		

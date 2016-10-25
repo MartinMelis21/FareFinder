@@ -54,6 +54,7 @@ public class KayakFetcher extends FareFetcher {
 		Integer destinationID = null;
 		SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
 		SimpleDateFormat outputFormatter = new SimpleDateFormat("yyyy-MM-dd");
+		
 		try {
 	    	creatMapping ();
 		
@@ -109,7 +110,7 @@ public class KayakFetcher extends FareFetcher {
      			
      			System.out.println("Outbound Leg\n\tFrom : " + fare.getOrigin().getCityName()  + " to " + fare.getDestination().getCityName() );
      			System.out.println("\tDate : " + fare.getOutboundLeg().toString());
-     			System.out.println("Inbound Leg\n\tFrom : " + fare.getOrigin().getCityName()  + " to " + fare.getDestination().getCityName() );
+     			System.out.println("Inbound Leg\n\tFrom : " + fare.getDestination().getCityName()  + " to " + fare.getOrigin().getCityName() );
      			System.out.println("\tDate : " + fare.getInboundLeg().toString());
      			System.out.println("Price : " + fare.getPrice());
      			System.out.println("Average price on this route : " + fare.getBaseFare());

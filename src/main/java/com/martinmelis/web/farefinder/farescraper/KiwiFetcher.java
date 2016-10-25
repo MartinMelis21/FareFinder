@@ -116,6 +116,9 @@ public class KiwiFetcher extends FareFetcher {
      			System.out.println("DealRatio : " + fare.getDealRatio());
      			System.out.println("Booking URL : " + fare.getBookingURL());
      			System.out.println ();
+     			
+     			if (fare.getOrigin().getIataFaa().toUpperCase().equals("LGG") && fare.getDestination().getIataFaa().toUpperCase().equals("TFS"))
+     				System.out.print("");
      		}
          }
       } catch (Exception e) {

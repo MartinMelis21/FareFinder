@@ -205,12 +205,16 @@ public class FareScraper {
 		RoundTripFare innerPivotFare = null;
 		RoundTripFare cheapestFare = null;
 		
-		for (outterIndex = 0;outterIndex < (fares.size()-1);outterIndex++)
+		for (outterIndex = 0;outterIndex < (fares.size());outterIndex++)
 		{
 			if (skipIndexes.contains(outterIndex))
 				continue;
 			
 			outterPivotFare = fares.get(outterIndex);
+			
+			if (outterPivotFare.getOrigin().getIataFaa().toUpperCase().equals("LGG") && outterPivotFare.getDestination().getIataFaa().toUpperCase().equals("TFS"))
+ 				System.out.print("");
+			
 			cheapestFare = outterPivotFare;
 			for (innerIndex = (outterIndex+1);innerIndex < fares.size();innerIndex++)
 			{
@@ -218,6 +222,9 @@ public class FareScraper {
 					continue;
 				
 				innerPivotFare = fares.get(innerIndex);
+				
+				if (innerPivotFare.getOrigin().getIataFaa().toUpperCase().equals("LGG") && innerPivotFare.getDestination().getIataFaa().toUpperCase().equals("TFS"))
+	 				System.out.print("");
 				
 				if (innerPivotFare.getOrigin().equals(outterPivotFare.getOrigin()) && innerPivotFare.getDestination().equals(outterPivotFare.getDestination()))
 				{
@@ -366,6 +373,7 @@ public class FareScraper {
 	     			RoundTripFare fare = filteredFares.get(temp);
 	     			
 	     			
+	     		
 	     			
 	     			//--------------for FareFinder output------------------
 	     			if (fare.getOrigin().getZone() != fare.getDestination().getZone()  && fare.getPrice() <= 300 && fare.getSaleRatio() >= 30 && fare.getDealRatio() <= 0.04)

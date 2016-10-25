@@ -310,7 +310,7 @@ public class FareScraper {
 				}
 		
 		//---Kiwi fare---
-				if (fare.getBookingURL().equals("https://www.kiwi.com"))
+				if (fare.getBookingURL().startsWith("https://www.kiwi.com"))
 					{
 						for (FareFetcher fareFetcher:fetcherList)
 						{
@@ -321,6 +321,19 @@ public class FareScraper {
 							}
 						}
 					}
+		
+		//---Kayak fare---
+				if (fare.getBookingURL().startsWith("https://www.kayak.com"))
+					{
+						for (FareFetcher fareFetcher:fetcherList)
+						{
+							if (fareFetcher instanceof KayakFetcher)
+							{
+								fetcher = fareFetcher ;
+								break;
+							}
+						}
+					}		
 		
 		
 		//------return the fetched live price
@@ -391,11 +404,11 @@ public class FareScraper {
 	     				{
 		     				
 		     				// fare is published and interesting..to save on calls we only call those we expect to be good
-		     				if (fare.getOrigin().getZone() != fare.getDestination().getZone()  && fare.getPrice() <= 300 && fare.getSaleRatio() >= 30 && fare.getDealRatio() <= 0.04)
+		     				if (fare.getOrigin().getZone() != fare.getDestination().getZone()  && fare.getPrice() <= 300 && fare.getSaleRatio() >= 30 )
 		     				{		  
 		     					Integer livePrice = fetchLivePrice (fareFetcherList,fare);  
 		     					// We were unable to register updated fare price or the live gathered price is not interesting
-		    	     			if (livePrice != null && livePrice < 300 && ((fare.getBaseFare()* 0.7)/livePrice >= 1 ) && fare.getDealRatio() <= 0.04)
+		    	     			if (livePrice != null && livePrice < 300 && ((fare.getBaseFare()* 0.7)/livePrice >= 1 ))
 		    	     			{
 		    	     			
 		    	     			///-------this means we have live price and live price is considered a deal----
@@ -470,13 +483,13 @@ public class FareScraper {
 	     			{
     	     			
 	     				//is interesting
-	     				if (fare.getOrigin().getZone() != fare.getDestination().getZone()  && fare.getPrice() <= 300 && fare.getSaleRatio() >= 30 && fare.getDealRatio() <= 0.04)
+	     				if (fare.getOrigin().getZone() != fare.getDestination().getZone()  && fare.getPrice() <= 300 && fare.getSaleRatio() >= 30)
 	     				{
 	     					
 	     					Integer livePrice = fetchLivePrice (fareFetcherList,fare);
 	    	     			
 	    	     			// We were unable to register updated fare price
-	    	     			if (livePrice != null && livePrice < 300 && ((fare.getBaseFare()* 0.7)/livePrice >= 1 ) && fare.getDealRatio() <= 0.04)
+	    	     			if (livePrice != null && livePrice < 300 && ((fare.getBaseFare()* 0.7)/livePrice >= 1 ))
 	    	     			{
 		     					try
 		     					{

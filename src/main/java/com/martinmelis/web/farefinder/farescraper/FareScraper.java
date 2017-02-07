@@ -334,7 +334,7 @@ public class FareScraper {
 			//I check if fare is interesting
 				if (!fare.isInteresting()){
 				//If it is not interesting anymore we check if it is published
-					if (fare.getPortalPostID() != -1){
+					if (fare.getPortalPostID() != null &&  fare.getPortalPostID() != -1){
 						//If it is not interesting and published we set fare to Expired and published to false
 						fare.expireFarePublication(portalPublisher, databaseHandler);
 					}

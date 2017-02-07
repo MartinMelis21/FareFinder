@@ -3,11 +3,14 @@ package dataTypes;
 import java.util.ArrayList;
 import java.util.Date;
 
+import org.joda.time.DateTime;
+
 import com.martinmelis.web.farefinder.databaseHandler.DatabaseHandler;
 import com.martinmelis.web.farefinder.farescraper.FareFetcher;
 import com.martinmelis.web.farefinder.farescraper.KayakFetcher;
 import com.martinmelis.web.farefinder.farescraper.KiwiFetcher;
 import com.martinmelis.web.farefinder.farescraper.SkyScannerFetcher;
+import com.martinmelis.web.farefinder.modules.MailSender;
 import com.martinmelis.web.farefinder.publisher.Publisher;
 
 public class RoundTripFare {
@@ -259,6 +262,22 @@ public class RoundTripFare {
 		portalPublisher.updateFareOnPortal(this,"updated");
 		this.setPortalPostStatus("updated");
 		databaseHandler.updateFarePublication (this);
+	}
+	
+	public void notifyAboutFare (MailSender mailSender) {
+		Date lastAccountedDate = this.getLastFareNotification();
+		DateTime lastFareNotification = new DateTime (lastAccountedDate);
+		//If it is more than a day or is better than 20% of previously announced
+		DateTime lastWeek = DateTime.now().minusDays(7);
+		
+		//TODO publishing live needs to be redone
+		//portalPublisher.publishFareToPortal(fare);
+		
+		if (lastAccountedDate == null || (lastFareNotification.getMillis() < lastWeek.getMillis()))
+		{	//TODO or 20% better
+			mailSender.sendMail("martin.melis21@gmail.com", this);//TODO send to all mail reciepts
+			
+		}
 	}
 	
 	

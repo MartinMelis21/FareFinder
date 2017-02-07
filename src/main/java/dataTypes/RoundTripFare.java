@@ -1,6 +1,14 @@
 package dataTypes;
 
+import java.util.ArrayList;
 import java.util.Date;
+
+import com.martinmelis.web.farefinder.databaseHandler.DatabaseHandler;
+import com.martinmelis.web.farefinder.farescraper.FareFetcher;
+import com.martinmelis.web.farefinder.farescraper.KayakFetcher;
+import com.martinmelis.web.farefinder.farescraper.KiwiFetcher;
+import com.martinmelis.web.farefinder.farescraper.SkyScannerFetcher;
+import com.martinmelis.web.farefinder.publisher.Publisher;
 
 public class RoundTripFare {
 
@@ -75,8 +83,6 @@ public class RoundTripFare {
 	public void setPortalPostID(Integer portalPostID) {
 		
 		try{
-		//TODO I need to insert new portalPostID to database
-			
 		this.portalPostID = portalPostID;
 		}
 		catch(Exception e){
@@ -168,7 +174,92 @@ public class RoundTripFare {
 	public void setDealRatio(double dealRatio) {
 		this.dealRatio = dealRatio;
 	}
+	public Boolean isInteresting() {
+		if (this.getOrigin().getZone()/10 != this.getDestination().getZone()/10  && this.getPrice() <= 300 && this.getSaleRatio() >= 30 && this.getDealRatio() <= 0.04)
+			return true;
+		else
+			return false;
+	}
 	
+	public Integer fetchLivePrice (ArrayList <FareFetcher> fetcherList, RoundTripFare fare) throws Exception
+	{
+		Integer livePrice = null;
+		FareFetcher fetcher = null;
+		//---TODO new sources need to be added here---
+		
+		//---SkyScanner fare---
+			if (fare.getBookingURL().equals("http://www.skyscanner.com"))
+				{
+					for (FareFetcher fareFetcher:fetcherList)
+					{
+						if (fareFetcher instanceof SkyScannerFetcher)
+						{
+							fetcher = fareFetcher ;
+							break;
+						}
+					}
+				}
+		
+		//---Kiwi fare---
+				if (fare.getBookingURL().startsWith("https://www.kiwi.com"))
+					{
+						for (FareFetcher fareFetcher:fetcherList)
+						{
+							if (fareFetcher instanceof KiwiFetcher)
+							{
+								fetcher = fareFetcher ;
+								break;
+							}
+						}
+					}
+		
+		//---Kayak fare---
+				if (fare.getBookingURL().startsWith("https://www.kayak.com"))
+					{
+						for (FareFetcher fareFetcher:fetcherList)
+						{
+							if (fareFetcher instanceof KayakFetcher)
+							{
+								fetcher = fareFetcher ;
+								break;
+							}
+						}
+					}		
+		
+		
+		//------return the fetched live price
+				
+				if (fetcher != null)
+				{
+					// If the live checked price is not in the limit we skip this fare
+					if ((livePrice =fetcher.getLivePrice(fare))!=null)
+					{
+						this.price = livePrice;
+						this.setLastAccountedPrice(livePrice);
+						return livePrice;
+					}
+				}
+				return null;
+	}
+	
+	public void publishFare (Publisher portalPublisher, DatabaseHandler databaseHandler) throws Exception {
+		portalPublisher.publishFareToPortal(this);
+		this.setPortalPostStatus("new");
+		databaseHandler.updateFarePublication (this);
+	}
+	
+	public void expireFarePublication (Publisher portalPublisher, DatabaseHandler databaseHandler) throws Exception {
+		portalPublisher.updateFareOnPortal(this,"expired");
+		this.setPortalPostStatus("expired");
+		this.setPortalPostID(-1);
+		databaseHandler.updateFarePublication (this);
+	}
+	
+	public void updateFarePublication (Publisher portalPublisher, DatabaseHandler databaseHandler) throws Exception {
+		portalPublisher.updateFareOnPortal(this,"updated");
+		this.setPortalPostStatus("updated");
+		databaseHandler.updateFarePublication (this);
+	}
 	
 	
 }

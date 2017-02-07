@@ -277,9 +277,9 @@ public class Publisher {
 			post.put("post_title", "[UPDATED] " + fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());
 		if (newStatus.equals("expired"))
 			post.put("post_title", "[EXPIRED] " + fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());
-		if (newStatus.equals("active"))
+		if (newStatus.equals("new"))
 			post.put("post_title",fare.getOrigin().getCityName() + " to " + fare.getDestination().getCityName());	
-		if (newStatus.equals("updated") || newStatus.equals("active"))
+		if (newStatus.equals("updated") || newStatus.equals("actianalyzeResidualFaresve"))
 			post.put("post_content","Price: "+ fare.getPrice() + "\nSale: " + fare.getSaleRatio() + "\nEUR/Km: " + fare.getDealRatio()  + "\n<a href=\""+ fare.getBookingURL() + "\">URL</a>");
 		
 		

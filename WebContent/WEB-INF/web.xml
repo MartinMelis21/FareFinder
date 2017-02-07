@@ -22,8 +22,8 @@
   	</servlet>  
   	
   	<servlet>
-    <servlet-name>PostPublish</servlet-name>
-    <servlet-class>com.martinmelis.web.farefinder.servlet.PostPublish</servlet-class>
+    <servlet-name>Sandbox</servlet-name>
+    <servlet-class>com.martinmelis.web.farefinder.servlet.Sandbox</servlet-class>
   	</servlet>  
   	
   <servlet-mapping>
@@ -32,8 +32,8 @@
   </servlet-mapping> 
   
   <servlet-mapping>
-    <servlet-name>PostPublish</servlet-name>
-    <url-pattern>/postpublish</url-pattern>
+    <servlet-name>Sandbox</servlet-name>
+    <url-pattern>/sandbox</url-pattern>
   </servlet-mapping>
   
    <servlet-mapping>

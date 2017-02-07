@@ -94,6 +94,12 @@
 		</dependency>
 		
 		<dependency>
+		    <groupId>com.getsentry.raven</groupId>
+		    <artifactId>raven</artifactId>
+		    <version>7.8.0</version>
+		</dependency>
+		
+		<dependency>
 		  <groupId>net.bican</groupId>
 		  <artifactId>jwordpress</artifactId>
 		  <version>0.6.4</version>

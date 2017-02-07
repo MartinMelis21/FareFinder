@@ -44,7 +44,7 @@ import redstone.xmlrpc.XmlRpcFault;
  */
 
 @WebServlet("/PostPublish")
-public class PostPublish extends HttpServlet{
+public class Sandbox extends HttpServlet{
 	  
 	
 	  private static final long serialVersionUID = 1L;

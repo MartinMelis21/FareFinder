@@ -332,7 +332,7 @@ public class FareScraper {
 			RoundTripFare fare = filteredFares.get(temp);
 			
 			//I check if fare is interesting
-				if (!fare.isInteresting()){
+				if (!fare.isInteresting() ){
 				//If it is not interesting anymore we check if it is published
 					if (fare.getPortalPostID()!= -1){
 						//If it is not interesting and published we set fare to Expired and published to false

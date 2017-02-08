@@ -331,6 +331,12 @@ public class FareScraper {
  		{
 			RoundTripFare fare = filteredFares.get(temp);
 			
+//			--------------for FareFinder output------------------
+ 			if (fare.isInteresting()){	
+ 				resultFares.add(fare);
+				}	    			
+//			-----------------------------------------------------
+			
 			//I check if fare is interesting
 				if (!fare.isInteresting()){
 				//If it is not interesting anymore we check if it is published
@@ -342,14 +348,21 @@ public class FareScraper {
 				}
 				else
 				{
+					
+					//we check for live price and if we were unable to get one, we skip
+					//TODO mazbe if it is published we should expire
+					if (fare.fetchLivePrice(fareFetcherList,fare)==null)
+						continue;
+					
+					
 				//If it is interesting we check if it is published
 					if (fare.getPortalPostID()!= -1){
 						//If it is interesting and published we check if the price change is significant
 						Integer priceChange = fare.getLastAccountedPrice()-fare.getPrice();
+												
 						if (priceChange >= 20)
 						{
 								//If price changed more than 20percent we get the live price
-								fare.fetchLivePrice(fareFetcherList,fare);//+update fare price automatically
 								
 								if (fare.isInteresting())
 								{
@@ -366,7 +379,6 @@ public class FareScraper {
 					}
 					else{
 						//If it is interesting but not published we get the live price, check again if it is interesting and
-						fare.fetchLivePrice(fareFetcherList,fare);//+update fare price automatically
 						
 						if (fare.isInteresting())
 						{

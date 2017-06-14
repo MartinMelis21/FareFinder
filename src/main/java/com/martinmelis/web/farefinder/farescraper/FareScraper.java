@@ -384,7 +384,9 @@ public class FareScraper {
 				//If it is not interesting anymore we check if it is published
 					if (fare.getPortalPostID() != null &&  fare.getPortalPostID() != -1){
 						//If it is not interesting and published we set fare to Expired and published to false
-						fare.expireFarePublication(portalPublisher, databaseHandler);
+						
+						
+						//fare.expireFarePublication(portalPublisher, databaseHandler);
 					}
 						//If it is not interesting and not published we simply skip
 				}
@@ -410,11 +412,11 @@ public class FareScraper {
 								if (fare.isInteresting())
 								{
 									//If live price is still interesting i set fare to updated with new live price
-									fare.updateFarePublication(portalPublisher, databaseHandler);
+									//fare.updateFarePublication(portalPublisher, databaseHandler);
 								}
 								else{
 									//If live price is not interesting anymore I set fare to Expired and isPublished to false
-									fare.expireFarePublication(portalPublisher, databaseHandler);
+									//fare.expireFarePublication(portalPublisher, databaseHandler);
 								}
 						}
 								//If price changed less than 20percent we leave as as is and dont check for live price
@@ -426,7 +428,7 @@ public class FareScraper {
 						if (fare.isInteresting())
 						{
 							//If live price is interesting i set fare to New with new live price
-							fare.publishFare (portalPublisher, databaseHandler);
+							//fare.publishFare (portalPublisher, databaseHandler);
 						}
 							//If live price is not interesting nor published, we skip
 					}

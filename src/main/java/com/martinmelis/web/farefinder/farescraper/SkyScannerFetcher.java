@@ -87,7 +87,6 @@ public class SkyScannerFetcher extends FareFetcher {
      			
      			int originSSID =		Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("OriginId").item(0).getTextContent());
      			int destinationSSID = 	Integer.parseInt(((Element) eElement.getElementsByTagName("OutboundLeg").item(0)).getElementsByTagName("DestinationId").item(0).getTextContent());
-     			//TODO need to get SkyScanner booking URL
      			
      			
      			if ((originID = databaseHandler.getCachingLists().getSkyScannerIDMapping().get(originSSID)) == null)

@@ -20,6 +20,7 @@ import javax.naming.InitialContext;
 import javax.servlet.ServletContext;
 import javax.sql.DataSource;
 
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -27,8 +28,8 @@ import org.quartz.JobExecutionException;
 import com.martinmelis.web.farefinder.databaseHandler.DatabaseHandler;
 import com.martinmelis.web.farefinder.farescraper.FareScraper;
 
-
-public class SchedulerJob implements org.quartz.StatefulJob {
+@DisallowConcurrentExecution
+public class SchedulerJob implements Job {
 	
 		private ArrayList <String> origins;	
 
@@ -39,7 +40,8 @@ public class SchedulerJob implements org.quartz.StatefulJob {
 		  	  
 			  origins = new ArrayList <String> ();
 			  
-			    origins.add("AT");
+			    
+			  	origins.add("AT");
 			  	origins.add("SK");
 			  	origins.add("CZ");
 			  	origins.add("HU");
@@ -56,13 +58,14 @@ public class SchedulerJob implements org.quartz.StatefulJob {
 			  	origins.add("UK");
 			  	origins.add("NL");
 			  	origins.add("BE");
+			  	origins.add("CH");
+			  	origins.add("LU");
+			  	origins.add("GR");
+			  	origins.add("MT");
 	            
 		}
 	  
 	  
-	
-	
-
 	public void execute (JobExecutionContext context)
 	throws JobExecutionException {
 		 

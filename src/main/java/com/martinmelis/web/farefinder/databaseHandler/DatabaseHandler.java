@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,6 +30,7 @@ import org.xml.sax.SAXException;
 import com.martinmelis.web.farefinder.farescraper.CachingModule;
 
 import dataTypes.AirportStructure;
+import dataTypes.InterregionalFare;
 import dataTypes.RoundTripFare;
 
 public class DatabaseHandler {
@@ -181,7 +183,9 @@ public class DatabaseHandler {
 			
 			fare = new RoundTripFare (origin, destination, price, outbound, inbound, averageAccountedPrice,0,null,null,null); 
 			fare.setLastAccountedPrice (price); 
-			fare.setIsNew();
+			fare.setIsNew();			
+			insertDatabaseFare(fare);
+			
 		}			
 		return fare;
 }	
@@ -214,6 +218,63 @@ public class DatabaseHandler {
 		ps.setDate(7, new java.sql.Date(fare.getInboundLeg().getTime()));
 		
 		ps.executeUpdate();
+	}
+	
+	public void updateInterregionalFares(HashMap <String, InterregionalFare> interregionalFares) throws SQLException
+	{
+		PreparedStatement ps = null;								
+		ps = databaseConnection.prepareStatement(DatabaseQueries.updateRegionalRoutePrice);
+		
+		for (InterregionalFare irFare : interregionalFares.values())
+		{
+			if (irFare.getDatabaseUpdateRequirement() == true)
+			{
+				
+			ps.setInt(1, irFare.getNumberOfAccountedPrices());
+			ps.setInt(2, irFare.getLastAccountedPrice());
+			ps.setDouble(3, irFare.getAveragePrice());
+			ps.setInt(4, irFare.getDepartureRegion());
+			ps.setInt(5, irFare.getArrivalRegion());
+			
+			ps.executeUpdate();
+			
+			irFare.doesNotrequireDatabaseUpdate();
+			
+			}
+		}
+	}
+	
+	public HashMap <String, InterregionalFare> getInterregionalFares () throws SQLException{
+		
+		HashMap <String, InterregionalFare> interregionalFares = new HashMap <String, InterregionalFare> ();
+		final PreparedStatement ps = databaseConnection.prepareStatement(DatabaseQueries.getInterregionalFares);
+		final ResultSet resultSet = ps.executeQuery();
+		
+		Integer departureRegion;
+		Integer arrivalRegion;
+		Double averagePrice;
+		int numberOfAccountedPricesRoundTrip;
+		int lastAccountedPriceRoundTrip;
+		java.sql.Date lastAccountedPriceTimeRoundTrip;
+		
+		
+		while (resultSet.next()) {  		     	
+			departureRegion = 						resultSet.getInt(1);
+			arrivalRegion = 						resultSet.getInt(2);
+			averagePrice = 							resultSet.getDouble(3);
+			numberOfAccountedPricesRoundTrip = 		resultSet.getInt(4);
+			lastAccountedPriceRoundTrip = 			resultSet.getInt(5);
+			lastAccountedPriceTimeRoundTrip =		resultSet.getDate(6);   
+			
+			resultSet.close();
+			
+			InterregionalFare irFare = new InterregionalFare (departureRegion, arrivalRegion,averagePrice,numberOfAccountedPricesRoundTrip,lastAccountedPriceRoundTrip);
+			irFare.setLastAccountedPriceTime(lastAccountedPriceTimeRoundTrip);
+			interregionalFares.put(new String (departureRegion.toString() + arrivalRegion.toString()), irFare);
+		}
+		
+		
+		return interregionalFares;
 	}
 	
 	public void updateFarePublication (RoundTripFare fare) throws SQLException {
@@ -286,6 +347,8 @@ public class DatabaseHandler {
 				
 				resultSet.close();
 			}
+			
+			//TODO maybe airport infor WS needs to be called here ?
 			
 			AirportStructure airportStructure = new AirportStructure(airportName,cityName,country,latitude,longtitude,SSID,iataFaa, altitude, icao,zone,id);
 			cachingModule.getLocationDictionary().put(airportID, airportStructure);

@@ -17,8 +17,7 @@
   	
   	<servlet>
     <servlet-name>StartupScheduler</servlet-name>
-    <servlet-class>com.martinmelis.web.farefinder.servlet.StartupScheduler</servlet-class>    
-  	<load-on-startup>1</load-on-startup>
+    <servlet-class>com.martinmelis.web.farefinder.servlet.StartupScheduler</servlet-class> 
   	</servlet>  
   	
   	<servlet>
@@ -47,5 +46,11 @@
     <res-type>javax.sql.DataSource</res-type>
      <res-auth>Container</res-auth>
   </resource-ref> 
+  
+  <listener>
+		<listener-class>
+			org.quartz.ee.servlet.QuartzInitializerListener
+		</listener-class>
+	</listener>
   
 </web-app>

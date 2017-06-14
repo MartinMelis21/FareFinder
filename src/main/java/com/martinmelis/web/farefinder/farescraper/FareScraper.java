@@ -48,6 +48,7 @@ import com.martinmelis.web.farefinder.modules.MailSender;
 import com.martinmelis.web.farefinder.publisher.Publisher;
 
 import dataTypes.AirportStructure;
+import dataTypes.InterregionalFare;
 import dataTypes.RoundTripFare;
 
 import java.io.*;
@@ -98,7 +99,6 @@ public class FareScraper {
 			mailSender = new MailSender ();
 			portalPublisher = new Publisher();
 			accountedFares = new ArrayList <String> ();
-			fareFetcherList = new ArrayList <FareFetcher> ();
 			
  		System.out.println("Last fares update:\t" + fmt.print(dt));	
 		finalResponse = new StringBuffer("Last fares update:\t" +fmt.print(dt));
@@ -196,6 +196,51 @@ public class FareScraper {
 		return null;
 	}
 	
+	public void accountRegionalFares (ArrayList<RoundTripFare> allFares, HashMap <String, InterregionalFare> interregionalFares, DatabaseHandler databaseHandler) throws SQLException
+	{
+		
+	for (RoundTripFare roundTripFare : allFares)
+		{
+		//may get nullpointer for example if newly accounted airport is not classified
+			Integer originRegion = roundTripFare.getOrigin().getZone();
+			Integer destinationRegion = roundTripFare.getDestination().getZone();
+			
+			//String concat of Zone codes used for hashing...can be problem if zone codes change
+			String key = originRegion.toString() + destinationRegion.toString();
+			InterregionalFare interregionalFare;
+			
+			if ((interregionalFare = interregionalFares.get(key)) != null )
+			{
+				int numberOfAccountedPrices = interregionalFare.getNumberOfAccountedPrices();
+				Double averagePrice = interregionalFare.getAveragePrice();
+				Double newAveragePrice = (numberOfAccountedPrices*averagePrice+roundTripFare.getPrice())/(numberOfAccountedPrices+1);
+				
+				if (averagePrice !=newAveragePrice)
+				{
+				interregionalFare.addNewAccountedPrice();
+				interregionalFare.setAveragePrice (newAveragePrice);
+				interregionalFare.setLastAccountedPrice(roundTripFare.getPrice());
+				interregionalFare.requiresDatabaseUpdate();
+				}
+			}
+			else
+			{
+				
+				int numberOfAccountedPrices = 0;
+				Double averagePrice = 0.0;
+				Double newAveragePrice = new Double (roundTripFare.getPrice());
+				
+				interregionalFare = new InterregionalFare (originRegion, destinationRegion,newAveragePrice, 1, roundTripFare.getPrice());
+				interregionalFare.requiresDatabaseUpdate();				
+				interregionalFares.put(key, interregionalFare);
+			}
+			
+		}
+	
+	databaseHandler.updateInterregionalFares (interregionalFares);
+		
+	}
+	
 	public ArrayList<RoundTripFare> filterFares(ArrayList<RoundTripFare> fares)
 	{
 		ArrayList<RoundTripFare> filteredFares = new ArrayList<RoundTripFare> ();
@@ -212,9 +257,6 @@ public class FareScraper {
 			
 			outterPivotFare = fares.get(outterIndex);
 			
-			if (outterPivotFare.getOrigin().getIataFaa().toUpperCase().equals("LGG") && outterPivotFare.getDestination().getIataFaa().toUpperCase().equals("TFS"))
- 				System.out.print("");
-			
 			cheapestFare = outterPivotFare;
 			for (innerIndex = (outterIndex+1);innerIndex < fares.size();innerIndex++)
 			{
@@ -222,10 +264,7 @@ public class FareScraper {
 					continue;
 				
 				innerPivotFare = fares.get(innerIndex);
-				
-				if (innerPivotFare.getOrigin().getIataFaa().toUpperCase().equals("LGG") && innerPivotFare.getDestination().getIataFaa().toUpperCase().equals("TFS"))
-	 				System.out.print("");
-				
+							
 				if (innerPivotFare.getOrigin().equals(outterPivotFare.getOrigin()) && innerPivotFare.getDestination().equals(outterPivotFare.getDestination()))
 				{
 					skipIndexes.add(innerIndex);
@@ -296,6 +335,7 @@ public class FareScraper {
 		
 		
 		//-----------------TODO new architecture-------------------
+		fareFetcherList = new ArrayList <FareFetcher> ();
 		FareFetcher skyScannerFetcher = new SkyScannerFetcher (databaseHandler);
 		FareFetcher kiwiFetcher = new KiwiFetcher (databaseHandler);
 		FareFetcher kayakFetcher = new KayakFetcher (databaseHandler);
@@ -308,7 +348,8 @@ public class FareScraper {
 		
 		ArrayList<RoundTripFare> filteredFares = new ArrayList<RoundTripFare> ();
 		ArrayList<RoundTripFare> resultFares = new ArrayList<RoundTripFare> ();
-		
+		ArrayList<RoundTripFare> allFares= new ArrayList <RoundTripFare> ();
+		HashMap <String, InterregionalFare> interregionalFares = databaseHandler.getInterregionalFares ();
 				
 		for (String origin: countryList)
 		{
@@ -317,6 +358,7 @@ public class FareScraper {
 			for (FareFetcher fareFetcher : fareFetcherList)
 			{
 				fares.addAll(fareFetcher.getFareList(origin));
+				allFares.addAll(fares);
 			}
 	        
 						
@@ -354,6 +396,7 @@ public class FareScraper {
 					if (fare.fetchLivePrice(fareFetcherList,fare)==null)
 						continue;
 					
+					fare.notifyAboutFare(mailSender);
 					
 				//If it is interesting we check if it is published
 					if (fare.getPortalPostID()!= -1){
@@ -384,7 +427,6 @@ public class FareScraper {
 						{
 							//If live price is interesting i set fare to New with new live price
 							fare.publishFare (portalPublisher, databaseHandler);
-							fare.notifyAboutFare(mailSender);
 						}
 							//If live price is not interesting nor published, we skip
 					}
@@ -558,6 +600,7 @@ public class FareScraper {
 //	     			
 //	     		}
 	         }		
+		accountRegionalFares(allFares,interregionalFares,databaseHandler);
 		
 		//we need to check all published fares, that were not accounted in resultFares
 		//TODO analyzeResidualFares(resultFares);

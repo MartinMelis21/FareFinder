@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -40,10 +41,19 @@ public class KiwiFetcher extends FareFetcher {
 		this.databaseHandler=databaseHandler;
 	}
 
-	public ArrayList <RoundTripFare> getFareList (String origin)
+	public ArrayList <RoundTripFare> getFareListOffset (String origin, Integer offset)
 	{
 		ArrayList<RoundTripFare> fares = new ArrayList<RoundTripFare>();
-		String fetchURL = "https://api.skypicker.com/flights?flyFrom="+origin+"&typeFlight=return&xml=1&oneforcity=1&limit=200";
+		
+		Calendar cal = Calendar.getInstance();
+		Date today = cal.getTime();
+		cal.add(Calendar.YEAR, 1);
+		Date tomorow = cal.getTime();
+		
+		String dateFrom = new SimpleDateFormat ("dd/MM/YYYY").format(today).replaceAll("/", "%2F");
+		String dateTo = new SimpleDateFormat ("dd/MM/YYYY").format(tomorow).replaceAll("/", "%2F");
+		String fetchURL = "https://api.skypicker.com/flights?DateFrom="+dateFrom+"?DateTo="+dateTo+"&daysInDestinationFrom=2&daysInDestinationTo=14&xml=1&price_to=300&asc=0&limit=200&oneforcity=1&offset="+offset+"&flyFrom=" + origin;
+		String newFetchURL = null;
 		
 		 try {
 		 creatMapping ();
@@ -52,6 +62,14 @@ public class KiwiFetcher extends FareFetcher {
          DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
          Document doc = dBuilder.parse(new InputSource(new StringReader(fetchedFares)));
          doc.getDocumentElement().normalize();
+         
+         //recursive iterating
+         if (!doc.getElementsByTagName("_next").item(0).getTextContent().equals("None"))  
+         {
+        	 offset += 200;
+        	 fares.addAll(getFareListOffset (origin,offset));
+         } 
+         
          
          
          NodeList quoteList = doc.getElementsByTagName("data");
@@ -73,7 +91,7 @@ public class KiwiFetcher extends FareFetcher {
      			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss");     			
      			
      			String outboundDateString = ((Element) eElement.getElementsByTagName("route").item(0)).getElementsByTagName("aTime").item(0).getTextContent();
-     			String inboundDateString =  ((Element) eElement.getElementsByTagName("route").item(1)).getElementsByTagName("aTime").item(0).getTextContent();
+     			String inboundDateString =  ((Element) eElement.getElementsByTagName("route").item(0)).getElementsByTagName("dTime").item(0).getTextContent();
      			
      			Date outboundDate = 	df.parse(outboundDateString);
      			Date inboundDate = 		df.parse(inboundDateString);
@@ -123,8 +141,9 @@ public class KiwiFetcher extends FareFetcher {
          }
       } catch (Exception e) {
          e.printStackTrace();
-      }			
-		return fares;
+      }		
+		
+		 return fares;
 		
 	}
 	
@@ -186,7 +205,7 @@ public class KiwiFetcher extends FareFetcher {
 	{
 		//hardcoded index of booking URL start
 		String bookingToken = fare.getBookingURL().substring(38);
-		String checkURL = "https://booking-api.skypicker.com/api/v0.1/check_flights?v=2&booking_token=" + bookingToken + "&bnum=0&pnum=1&currency=\"EUR\"";
+		String checkURL = "https://booking-api.skypicker.com/api/v0.1/check_flights?v=2&booking_token=" + bookingToken + "&bnum=0&pnum=1&currency=EUR";
 		String response = getRequest(checkURL);	
 		
 		//total
@@ -201,6 +220,13 @@ public class KiwiFetcher extends FareFetcher {
 		return null;
 		
 	}
+
+	@Override
+	public ArrayList<RoundTripFare> getFareList(String origin) {
+		
+		return getFareListOffset (origin,0);
+	}
+
 	
 	
 }

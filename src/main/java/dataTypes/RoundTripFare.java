@@ -1,5 +1,6 @@
 package dataTypes;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -181,7 +182,7 @@ public class RoundTripFare {
 		
 		//get the average price to that region from this region
 		
-		if (this.getOrigin().getZone()/10 != this.getDestination().getZone()/10  && this.getPrice() <= 300 && this.getSaleRatio() >= 30 && this.getDealRatio() <= 0.04)
+		if (this.getOrigin().getZone()/10 != this.getDestination().getZone()/10  && this.getPrice() <= 300 && this.getSaleRatio() >= 30 && this.getDealRatio() <= 0.50)
 			return true;
 		else
 			return false;
@@ -267,19 +268,16 @@ public class RoundTripFare {
 		databaseHandler.updateFarePublication (this);
 	}
 	
-	public void notifyAboutFare (MailSender mailSender) {
+	public void notifyAboutFare (MailSender mailSender) throws SQLException {
 		Date lastAccountedDate = this.getLastFareNotification();
 		DateTime lastFareNotification = new DateTime (lastAccountedDate);
 		//If it is more than a day or is better than 20% of previously announced
 		DateTime lastWeek = DateTime.now().minusDays(7);
 		
-		//TODO publishing live needs to be redone
-		//portalPublisher.publishFareToPortal(fare);
 		
 		if (lastAccountedDate == null || (lastFareNotification.getMillis() < lastWeek.getMillis()))
 		{	//TODO or 20% better
 			mailSender.sendMail("martin.melis21@gmail.com", this);//TODO send to all mail reciepts
-			
 		}
 	}
 	

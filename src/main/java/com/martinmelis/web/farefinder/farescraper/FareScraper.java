@@ -373,50 +373,43 @@ public class FareScraper {
  		{
 			RoundTripFare fare = filteredFares.get(temp);
 			
-//			--------------for FareFinder output------------------
- 			if (fare.isInteresting()){	
- 				resultFares.add(fare);
-				}	    			
-//			-----------------------------------------------------
-			
+
 			//I check if fare is interesting
 				if (!fare.isInteresting()){
 				//If it is not interesting anymore we check if it is published
 					if (fare.getPortalPostID() != null &&  fare.getPortalPostID() != -1){
 						//If it is not interesting and published we set fare to Expired and published to false
-						
-						
-						//fare.expireFarePublication(portalPublisher, databaseHandler);
+						fare.expireFarePublication(portalPublisher, databaseHandler);
 					}
 						//If it is not interesting and not published we simply skip
 				}
 				else
 				{
-					
+					resultFares.add(fare);
 					//we check for live price and if we were unable to get one, we skip
-					//TODO mazbe if it is published we should expire
+					//TODO maybe if it is published we should expire
 					if (fare.fetchLivePrice(fareFetcherList,fare)==null)
 						continue;
 					
-					fare.notifyAboutFare(mailSender);
 					
 				//If it is interesting we check if it is published
 					if (fare.getPortalPostID()!= -1){
 						//If it is interesting and published we check if the price change is significant
-						Integer priceChange = fare.getLastAccountedPrice()-fare.getPrice();
+						Double priceChange = (fare.getLastAccountedPrice()-fare.getPrice())/Double.parseDouble(fare.getLastAccountedPrice().toString());
 												
-						if (priceChange >= 20)
+						if (priceChange >= 1.2)
 						{
 								//If price changed more than 20percent we get the live price
 								
 								if (fare.isInteresting())
 								{
 									//If live price is still interesting i set fare to updated with new live price
-									//fare.updateFarePublication(portalPublisher, databaseHandler);
+									fare.notifyAboutFare(mailSender);
+									fare.updateFarePublication(portalPublisher, databaseHandler);
 								}
 								else{
 									//If live price is not interesting anymore I set fare to Expired and isPublished to false
-									//fare.expireFarePublication(portalPublisher, databaseHandler);
+									fare.expireFarePublication(portalPublisher, databaseHandler);
 								}
 						}
 								//If price changed less than 20percent we leave as as is and dont check for live price
@@ -428,7 +421,8 @@ public class FareScraper {
 						if (fare.isInteresting())
 						{
 							//If live price is interesting i set fare to New with new live price
-							//fare.publishFare (portalPublisher, databaseHandler);
+							fare.notifyAboutFare(mailSender);
+							fare.publishFare (portalPublisher, databaseHandler);
 						}
 							//If live price is not interesting nor published, we skip
 					}

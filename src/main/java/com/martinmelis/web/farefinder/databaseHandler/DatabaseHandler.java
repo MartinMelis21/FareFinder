@@ -84,6 +84,11 @@ public class DatabaseHandler {
 	PreparedStatement ps = null;
 	ResultSet resultSet = null;
 	
+	if ((fare = cachingModule.getCachedFares().get(new String (originID.toString() + destinationID.toString())))!=null)
+	{
+		return fare;
+	}
+	
 			
 		ps = databaseConnection.prepareStatement(DatabaseQueries.getFareSQL);
 		ps.setInt(1, originID);
@@ -172,7 +177,9 @@ public class DatabaseHandler {
 			}
 			
 			fare = new RoundTripFare (origin, destination, price, outbound, inbound, averageAccountedPrice,numberOfPricesRoundTrip,lastFareNotification,portalPostID,portalPostStatus); 
-			fare.setLastAccountedPrice (lastAccountedPrice);     			
+			fare.setLastAccountedPrice (lastAccountedPrice);  
+			
+			
 		}
 		// In case Fare is not accounted, either we know airports, but dont know fare, or we dont know one airport, or we dont know any of airports
 		else
@@ -186,7 +193,9 @@ public class DatabaseHandler {
 			fare.setIsNew();			
 			insertDatabaseFare(fare);
 			
-		}			
+		}	
+		
+		cachingModule.cacheFare(fare);		
 		return fare;
 }	
 	

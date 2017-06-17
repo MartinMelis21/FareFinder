@@ -27,10 +27,10 @@ public class RoundTripFare {
 	private double saleRatio;
 	private boolean isNew;
 	private String bookingURL = null;
-	private Integer numberOfAccountedPricesRoundTrip;
-	private Integer portalPostID = null;
+	private Integer numberOfAccountedPricesRoundTrip = 0;
+	private Integer portalPostID = -1;
 	private String portalPostStatus = null;
-	private Integer lastAccountedPrice = null;
+	private Integer lastAccountedPrice = -1;
 	
 	
 	public RoundTripFare(AirportStructure origin, AirportStructure destination, int price, Date outbound, Date inbound, double baseFare, int numberOfAccountedFares, Date lastFareNotification,Integer portalPostID,String portalPostStatus) {
@@ -49,6 +49,10 @@ public class RoundTripFare {
 		this.lastFareNotification = lastFareNotification;
 		this.portalPostID = portalPostID;
 		this.portalPostStatus = portalPostStatus;
+		
+		if(portalPostID == 0)
+			System.out.println("Warinng!!");
+		
 	}
 		
 	private double getDistance () {
@@ -88,6 +92,8 @@ public class RoundTripFare {
 		
 		try{
 		this.portalPostID = portalPostID;
+		if(portalPostID == 0)
+			System.out.println("Warinng!!");
 		}
 		catch(Exception e){
 			

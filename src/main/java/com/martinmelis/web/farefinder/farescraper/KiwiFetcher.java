@@ -52,7 +52,7 @@ public class KiwiFetcher extends FareFetcher {
 		
 		String dateFrom = new SimpleDateFormat ("dd/MM/YYYY").format(today).replaceAll("/", "%2F");
 		String dateTo = new SimpleDateFormat ("dd/MM/YYYY").format(tomorow).replaceAll("/", "%2F");
-		String fetchURL = "https://api.skypicker.com/flights?DateFrom="+dateFrom+"?DateTo="+dateTo+"&daysInDestinationFrom=2&daysInDestinationTo=14&xml=1&price_to=300&asc=0&limit=200&oneforcity=1&offset="+offset+"&flyFrom=" + origin;
+		String fetchURL = "https://api.skypicker.com/flights?DateFrom="+dateFrom+"?DateTo="+dateTo+"&daysInDestinationFrom=2&daysInDestinationTo=14&xml=1&price_to=300&asc=1&limit=200&oneforcity=1&offset="+offset+"&flyFrom=" + origin;
 		String newFetchURL = null;
 		
 		 try {

@@ -4,6 +4,7 @@ import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -16,6 +17,7 @@ import org.xml.sax.InputSource;
 
 import com.martinmelis.web.farefinder.databaseHandler.DatabaseHandler;
 
+import dataTypes.AirportStructure;
 import dataTypes.RoundTripFare;
 
 public abstract class FareFetcher {

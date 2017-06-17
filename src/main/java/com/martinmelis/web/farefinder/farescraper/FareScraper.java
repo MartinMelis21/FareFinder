@@ -63,27 +63,10 @@ public class FareScraper {
 	
 	BufferedReader in;
 	private final String USER_AGENT = "Mozilla/5.0";
-	private HashMap <Integer,AirportStructure> locationDictionary;
-	private HashMap <Integer,Integer> skyScannerIDMapping;
-	private HashMap <String,Integer> kiwiMapping;
 	private ArrayList <FareFetcher> fareFetcherList;
-	private ArrayList <String> accountedFares = null;
 	
 	StringBuffer finalResponse;
-	final String getAirportOnIDSQL = 		"SELECT a.airportName,a.airportCity,a.airportCountry,a.latitude,a.longtitude,a.iataFaa,a.altitude,a.icao,z.id, a.airportID, a.SkyScannerID from Airports a left join Countries c on a.airportCountry=c.countryName left join Zones z on c.zone=z.id WHERE airportID = ?";
-	final String getAirportOnSSIDSQL = 		"SELECT a.airportName,a.airportCity,a.airportCountry,a.latitude,a.longtitude,a.iataFaa,a.altitude,a.icao,z.id, a.airportID, a.SkyScannerID from Airports a left join Countries c on a.airportCountry=c.countryName left join Zones z on c.zone=z.id WHERE SkyScannerID = ?";
-	final String getAirportOnIataFaaSQL = 	"SELECT a.airportName,a.airportCity,a.airportCountry,a.latitude,a.longtitude,a.iataFaa,a.altitude,a.icao,z.id, a.airportID, a.SkyScannerID from Airports a left join Countries c on a.airportCountry=c.countryName left join Zones z on c.zone=z.id WHERE a.iataFaa = ?";
-	final String getFareSQL = 				"SELECT o.airportName,o.airportCity,o.airportCountry,o.latitude,o.longtitude,o.iataFaa,o.altitude,o.icao,oc.zone,d.airportName,d.airportCity,d.airportCountry,d.latitude,d.longtitude,d.iataFaa,d.altitude,d.icao,dc.zone,f.lastAccountedPriceRoundTrip, f.numberOfAccountedPricesRoundTrip, f.averagePriceRoundTrip, o.SkyScannerID, d.SkyScannerID,  if(f.lastFareNotification = '0000-00-00', null, f.lastFareNotification), f.portalPostID, f.portalPostStatus as lastFareNotification from Fares f, Airports o, Airports d, Countries oc, Countries dc where f.origin = ? and f.destination = ? and f.origin=o.airportID and f.destination=d.airportID and oc.countryName=o.airportCountry and dc.countryName=d.airportCountry";
-	final String addAirportSQL = 			"INSERT INTO Airports (iataFaa, airportName, airportCity, airportCountry, latitude, longtitude, altitude, icao) values (?, ?, ?, ?, ?, ?, ?, ?)";
-	final String updateSSIDSQL = 			"UPDATE Airports SET SkyScannerID = ? WHERE iataFaa = ?";
-	final String checkFareExistance = 		"SELECT numberOfAccountedPricesRoundTrip, averagePriceRoundTrip FROM Fares WHERE origin = (SELECT airportID FROM Airports WHERE iataFaa = ?) AND destination = (SELECT airportID FROM Airports WHERE iataFaa = ?)";
-	final String updateRoutePrice = 		"UPDATE Fares SET numberOfAccountedPricesRoundTrip = ?,lastAccountedPriceRoundTrip = ?,lastAccountedPriceTimeRoundTrip = NOW(),averagePriceRoundTrip = ?,outboundDate = ?,inboundDate = ? WHERE origin=(SELECT airportID FROM Airports WHERE iataFaa = ?) AND destination = (SELECT airportID FROM Airports WHERE iataFaa = ?)";
-	final String insertRoutePrice = 		"INSERT INTO Fares (origin,destination,lastAccountedPriceTimeRoundTrip,lastAccountedPriceRoundTrip,numberOfAccountedPricesRoundTrip,averagePriceRoundTrip,outboundDate,inboundDate)VALUES ((SELECT airportID FROM Airports WHERE iataFaa = ?),(SELECT airportID FROM Airports WHERE iataFaa = ?),NOW(),?,1,?,?,?);";
-	final String getSSIDMapping =			"SELECT airportID,SkyScannerID FROM Airports";
-	final String getIataMapping =			"SELECT airportID,iataFaa FROM Airports";
-	final String updateFarePublication =	"UPDATE Fares SET lastFareNotification = NOW(),portalPostID = ?,portalPostStatus = ? WHERE origin = ? and destination = ? ";
-	final String getResidualFares =			"SELECT f.origin, f.destination, f.lastAccountedPriceRoundTrip, f.outboundDate,f.inboundDate, f.portalPostID, f.portalPostStatus, o.airportName, o.airportCity,o.airportCountry,o.latitude,o.longtitude,o.iataFaa,o.altitude,o.icao,oc.id,o.SkyScannerID, d.airportName, d.airportCity,d.airportCountry,d.latitude,d.longtitude,d.iataFaa,d.altitude,d.icao,dc.id,d.SkyScannerID, f.averagePriceRoundTrip, f.numberOfAccountedPricesRoundTrip, if(f.lastFareNotification = '0000-00-00', null, f.lastFareNotification) FROM Fares f, Airports o, Airports d, Countries oc, Countries dc WHERE o.airportCountry=oc.countryName and d.airportCountry=dc.countryName and f.origin=o.airportID and f.destination = d.airportID and portalPostID IS NOT NULL AND portalPostStatus <> 'expired'";
-		
+
 	
 	private Connection conn = null;
 	private MailSender mailSender = null;
@@ -92,13 +75,12 @@ public class FareScraper {
 	//-----inicialization-----
 	
 	public FareScraper() throws IOException {
-			locationDictionary = new HashMap<Integer,AirportStructure>();
 			DateTimeZone zone = DateTimeZone.forID("Europe/Bratislava");
 			DateTime dt = new DateTime(zone);
 			DateTimeFormatter fmt = DateTimeFormat.forPattern("HH:mm dd.MM.yyyy");
 			mailSender = new MailSender ();
 			portalPublisher = new Publisher();
-			accountedFares = new ArrayList <String> ();
+			
 			
  		System.out.println("Last fares update:\t" + fmt.print(dt));	
 		finalResponse = new StringBuffer("Last fares update:\t" +fmt.print(dt));
@@ -312,7 +294,7 @@ public class FareScraper {
 	return 	faresDescription;
 	}
 	//-----Fetching the Fares Data and Quote Metadata-----
-	
+
 	public static ArrayList<RoundTripFare> sortFares(ArrayList<RoundTripFare> fares) {
 		
 		ArrayList<RoundTripFare> sortedFares = fares;
@@ -328,8 +310,6 @@ public class FareScraper {
 		
 		return sortedFares;
 		}
-	
-
 	
 	public ArrayList<RoundTripFare> getFares(ArrayList <String> countryList, DatabaseHandler databaseHandler) throws Exception {
 		

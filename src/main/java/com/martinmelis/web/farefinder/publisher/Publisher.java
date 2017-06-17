@@ -263,6 +263,7 @@ public class Publisher {
 	public void updateFareOnPortal(RoundTripFare fare, String newStatus) throws Exception {
 	
 		//for the existing custom fields we get their IDs
+		System.out.println(fare.getPortalPostID());
 		HashMap<String,Integer> CFMap = getCustomFieldIDs (fare.getPortalPostID());
 		
 		initializeConnection();

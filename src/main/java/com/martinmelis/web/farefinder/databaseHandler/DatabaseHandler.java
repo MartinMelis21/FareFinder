@@ -181,7 +181,7 @@ public class DatabaseHandler {
 			origin = getAirportInfo (originID); 				
 			destination = getAirportInfo (destinationID);		
 			
-			fare = new RoundTripFare (origin, destination, price, outbound, inbound, averageAccountedPrice,-1,null,null,null); 
+			fare = new RoundTripFare (origin, destination, price, outbound, inbound, averageAccountedPrice,0,null,-1,null); 
 			fare.setLastAccountedPrice (price); 
 			fare.setIsNew();			
 			insertDatabaseFare(fare);

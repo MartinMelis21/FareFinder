@@ -396,7 +396,9 @@ public class FareScraper {
 					if (fare.getPortalPostID()!= -1){
 						//If it is interesting and published we check if the price change is significant
 						Double priceChange = (fare.getLastAccountedPrice()-fare.getPrice())/Double.parseDouble(fare.getLastAccountedPrice().toString());
-												
+						
+						//TODO also if lastaccountedpricetime is old enough
+						
 						if (priceChange >= 1.2)
 						{
 								//If price changed more than 20percent we get the live price

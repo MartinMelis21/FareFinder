@@ -116,7 +116,7 @@ public class DatabaseHandler {
 		Integer originSSID =			 	null;
 		Integer destinationSSID =		 	null;
 		Date lastFareNotification=			null;
-		Integer portalPostID=				null;
+		Integer portalPostID=				-1;
 		String portalPostStatus = 			null;
 		Integer lastAccountedPrice=			null;
 		
@@ -181,7 +181,7 @@ public class DatabaseHandler {
 			origin = getAirportInfo (originID); 				
 			destination = getAirportInfo (destinationID);		
 			
-			fare = new RoundTripFare (origin, destination, price, outbound, inbound, averageAccountedPrice,0,null,null,null); 
+			fare = new RoundTripFare (origin, destination, price, outbound, inbound, averageAccountedPrice,-1,null,null,null); 
 			fare.setLastAccountedPrice (price); 
 			fare.setIsNew();			
 			insertDatabaseFare(fare);

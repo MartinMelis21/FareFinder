@@ -351,8 +351,7 @@ public class FareScraper {
 		
 		for (int temp = 0; temp < filteredFares.size(); temp++) 
  		{
-			RoundTripFare fare = filteredFares.get(temp);
-			
+			RoundTripFare fare = filteredFares.get(temp);		
 
 			//I check if fare is interesting
 				if (!fare.isInteresting()){
@@ -413,6 +412,7 @@ public class FareScraper {
 			
 
  		}
+		databaseHandler.updateDatabaseFares(filteredFares);
 		
 		
 		

@@ -118,8 +118,6 @@ public class SkyScannerFetcher extends FareFetcher {
      			System.out.println("Booking URL : " + fare.getBookingURL());
      			System.out.println ();
      			
-     			if (fare.getPortalPostID() == 0)
-     				System.out.println("Warning!!!");
      			
      		}
          }

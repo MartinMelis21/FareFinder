@@ -92,8 +92,6 @@ public class RoundTripFare {
 		
 		try{
 		this.portalPostID = portalPostID;
-		if(portalPostID == 0)
-			System.out.println("Warinng!!");
 		}
 		catch(Exception e){
 			

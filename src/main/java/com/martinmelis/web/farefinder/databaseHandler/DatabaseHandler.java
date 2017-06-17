@@ -86,6 +86,7 @@ public class DatabaseHandler {
 	
 	if ((fare = cachingModule.getCachedFares().get(new String (originID.toString() + destinationID.toString())))!=null)
 	{
+		fare.setLastAccountedPrice (price); 
 		return fare;
 	}
 	
@@ -204,7 +205,9 @@ public class DatabaseHandler {
 		return this.cachingModule;
 	}
 	
-	public void updateDatabaseFare(RoundTripFare fare) throws SQLException
+	public void updateDatabaseFares(ArrayList<RoundTripFare> filteredFares) throws SQLException
+	{
+	for (RoundTripFare fare:filteredFares)
 	{
 			PreparedStatement ps = null;
 			Integer numberOfAccountedPricesRoundTrip = fare.getNumberOfAccountedPricesRoundTrip();
@@ -227,6 +230,7 @@ public class DatabaseHandler {
 		ps.setDate(7, new java.sql.Date(fare.getInboundLeg().getTime()));
 		
 		ps.executeUpdate();
+	}
 	}
 	
 	public void updateInterregionalFares(HashMap <String, InterregionalFare> interregionalFares) throws SQLException
@@ -311,6 +315,7 @@ public class DatabaseHandler {
 			ps.setDouble(4, fare.getPrice());
 			ps.setDate(5, new java.sql.Date(fare.getOutboundLeg().getTime()));
 			ps.setDate(6, new java.sql.Date(fare.getInboundLeg().getTime()));
+			ps.setInt(7, -1); //portalPostID
 			
 			ps.executeUpdate();
 	}

@@ -186,7 +186,7 @@ public class RoundTripFare {
 		
 		//get the average price to that region from this region
 		
-		if (this.getOrigin().getZone()/10 != this.getDestination().getZone()/10  && this.getPrice() <= 300 && this.getSaleRatio() >= 30 && this.getDealRatio() <= 0.03)
+		if (this.getOrigin().getZone()/10 != this.getDestination().getZone()/10  && this.getPrice() <= 300 && this.getSaleRatio() >= 30 && this.getDealRatio() <= 0.04)
 			return true;
 		else
 			return false;

@@ -124,6 +124,7 @@ public class SkyScannerFetcher extends FareFetcher {
       } 
 		 catch (Exception e) 
 				{
+			 		System.out.println("Skyscanner fetcher failed");
 					e.printStackTrace();
 				}			
 		return fares;

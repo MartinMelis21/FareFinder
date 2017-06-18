@@ -412,14 +412,7 @@ public class FareScraper {
 			
 
  		}
-		databaseHandler.updateDatabaseFares(filteredFares);
-		
-		
-		
-		
-		
-		
-		
+		databaseHandler.updateDatabaseFares(filteredFares);	
 		
 		
 		

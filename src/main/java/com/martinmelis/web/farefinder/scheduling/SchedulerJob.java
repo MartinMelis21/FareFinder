@@ -40,7 +40,7 @@ public class SchedulerJob implements Job {
 		  	  
 			  origins = new ArrayList <String> ();
 			  
-			    /*
+			    
 			  	origins.add("AT");
 			  	origins.add("SK");
 			  	origins.add("CZ");
@@ -59,9 +59,9 @@ public class SchedulerJob implements Job {
 			  	origins.add("NL");
 			  	origins.add("BE");
 			  	origins.add("CH");
-			  	origins.add("LU");*/
+			  	origins.add("LU");
 			  	origins.add("GR");
-			  	//origins.add("MT");
+			  	origins.add("MT");
 	            
 		}
 	  

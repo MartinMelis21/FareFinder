@@ -41,27 +41,27 @@ public class SchedulerJob implements Job {
 			  origins = new ArrayList <String> ();
 			  
 			    
-			  	origins.add("AT");
-			  	origins.add("SK");
-			  	origins.add("CZ");
-			  	origins.add("HU");
-			  	origins.add("PL");
+			  	//origins.add("AT");
+			  	//origins.add("SK");
+			  	//origins.add("CZ");
+			  	//origins.add("HU");
+			  	//origins.add("PL");
 			  	origins.add("DE");
-			  	origins.add("NO");
-			  	origins.add("SE");
+			  	//origins.add("NO");
+			  	//origins.add("SE");
 			  	//origins.add("DK");
-			  	origins.add("UA");
+			  	//origins.add("UA");
 			  	origins.add("IT");
-			  	origins.add("PT");
+			  	//origins.add("PT");
 			  	origins.add("ES");
 			  	origins.add("FR");
 			  	origins.add("UK");
 			  	origins.add("NL");
-			  	origins.add("BE");
-			  	origins.add("CH");
+			  	//origins.add("BE");
+			  	//origins.add("CH");
 			  	origins.add("LU");
 			  	//origins.add("GR");
-			  	origins.add("MT");
+			  	//origins.add("MT");
 	            
 		}
 	  

@@ -49,7 +49,7 @@ public class SchedulerJob implements Job {
 			  	origins.add("DE");
 			  	origins.add("NO");
 			  	origins.add("SE");
-			  	origins.add("DK");
+			  	//origins.add("DK");
 			  	origins.add("UA");
 			  	origins.add("IT");
 			  	origins.add("PT");
@@ -60,7 +60,7 @@ public class SchedulerJob implements Job {
 			  	origins.add("BE");
 			  	origins.add("CH");
 			  	origins.add("LU");
-			  	origins.add("GR");
+			  	//origins.add("GR");
 			  	origins.add("MT");
 	            
 		}

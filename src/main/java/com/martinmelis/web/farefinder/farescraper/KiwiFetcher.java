@@ -90,8 +90,22 @@ public class KiwiFetcher extends FareFetcher {
      			String bookingToken = eElement.getElementsByTagName("booking_token").item(0).getTextContent();
      			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss");     			
      			
-     			String outboundDateString = (((Element) eElement).getElementsByTagName("aTime").item(0).getTextContent());
-     			String inboundDateString =  (((Element) eElement).getElementsByTagName("dTime").item(0).getTextContent());
+     			//first aDate from the Route with return 0
+     			 String outboundDateString = ((Element) eElement.getElementsByTagName("route").item(0)).getElementsByTagName("aTime").item(0).getTextContent();
+     			//first aDate from the Route with return 1
+     			
+     			//TODO temp workaround
+     			String inboundDateString = outboundDateString;
+     					
+     			for (int i = 0 ; i < (eElement.getElementsByTagName("route").getLength()); i++)
+     			{
+     				if ((((Element) eElement.getElementsByTagName("route").item(i)).getElementsByTagName("return").item(0).getTextContent().equals("1")))
+     				{
+     					inboundDateString =  ((Element) eElement.getElementsByTagName("route").item(i)).getElementsByTagName("aTime").item(0).getTextContent();
+     					break;
+     				}
+     			}
+     			
      			
      			Date outboundDate = 	df.parse(outboundDateString);
      			Date inboundDate = 		df.parse(inboundDateString);

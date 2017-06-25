@@ -329,7 +329,7 @@ public class FareScraper {
 		ArrayList<RoundTripFare> filteredFares = new ArrayList<RoundTripFare> ();
 		ArrayList<RoundTripFare> resultFares = new ArrayList<RoundTripFare> ();
 		ArrayList<RoundTripFare> allFares= new ArrayList <RoundTripFare> ();
-		HashMap <String, InterregionalFare> interregionalFares = databaseHandler.getInterregionalFares ();
+		//HashMap <String, InterregionalFare> interregionalFares = databaseHandler.getInterregionalFares ();
 				
 		for (String origin: countryList)
 		{
@@ -571,7 +571,7 @@ public class FareScraper {
 //	     			
 //	     		}
 	         }		
-		accountRegionalFares(allFares,interregionalFares,databaseHandler);
+		//accountRegionalFares(allFares,interregionalFares,databaseHandler);
 		
 		//we need to check all published fares, that were not accounted in resultFares
 		//TODO analyzeResidualFares(resultFares);

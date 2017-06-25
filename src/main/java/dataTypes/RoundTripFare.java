@@ -50,8 +50,6 @@ public class RoundTripFare {
 		this.portalPostID = portalPostID;
 		this.portalPostStatus = portalPostStatus;
 		
-		if(portalPostID == 0)
-			System.out.println("Warinng!!");
 		
 	}
 		

@@ -327,7 +327,7 @@ public class FareScraper {
 		//--------------------------------------------------------
 		
 		ArrayList<RoundTripFare> resultFares = new ArrayList<RoundTripFare> ();
-		//HashMap <String, InterregionalFare> interregionalFares = databaseHandler.getInterregionalFares ();
+		HashMap <String, InterregionalFare> interregionalFares = databaseHandler.getInterregionalFares ();
 				
 		for (String origin: countryList)
 		{
@@ -344,6 +344,7 @@ public class FareScraper {
 	        
 			System.out.println("Fetching completed, analysis started");			
 			//-----------------------------------------------------
+		
 		filteredFares = filterFares(fares);
 			
 			//TODO I also need to set all fares, which are not in current Deals list to be set to isPublished = 0
@@ -368,7 +369,6 @@ public class FareScraper {
 				else
 				{
 					System.out.println("Found an interesting fare, getting its live price");
-					resultFares.add(fare);
 					//we check for live price and if we were unable to get one, we skip
 					//TODO maybe if it is published we should expire
 					if (fare.fetchLivePrice(fareFetcherList,fare)==null)
@@ -376,7 +376,7 @@ public class FareScraper {
 						System.out.println("Live price was not fetched");
 						continue;
 					}
-					
+					resultFares.add(fare);
 					System.out.println("Successfully fetched live price");
 					
 				//If it is interesting we check if it is published
@@ -584,8 +584,8 @@ public class FareScraper {
 //	     			}	
 //	     			
 //	     		}
+		accountRegionalFares(filteredFares,interregionalFares,databaseHandler);
 	         }		
-		//accountRegionalFares(allFares,interregionalFares,databaseHandler);
 		
 		//we need to check all published fares, that were not accounted in resultFares
 		//TODO analyzeResidualFares(resultFares);

@@ -117,7 +117,7 @@ public class StartupScheduler extends HttpServlet {
 				.withIdentity("dummyTriggerName", "group1")
 				.withSchedule(
 					SimpleScheduleBuilder.simpleSchedule()
-					.withIntervalInMinutes(15)
+					.withIntervalInSeconds(10)
 						.repeatForever())
 				.build();
 

@@ -24,7 +24,7 @@ public class CachingModule {
 		locationDictionary = new HashMap <Integer,AirportStructure> ();
 		iataFaaMapping = new HashMap <String,Integer> ();
 		skyScannerIDMapping = new HashMap <Integer,Integer> ();
-		faresCachedList = new HashMap <String,RoundTripFare> ();
+		faresCachedList = new HashMap <String,RoundTripFare> (100000);
 	}
 
 	public HashMap<Integer, Integer> getSkyScannerIDMapping() {

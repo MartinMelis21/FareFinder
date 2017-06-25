@@ -105,6 +105,7 @@ public class KayakFetcher extends FareFetcher {
      			}
      			
      			RoundTripFare fare = databaseHandler.getRoundTripFare (originID, destinationID, price,outboundDate,inboundDate);
+     			
      			fare.setBookingURL("https://www.kayak.com/flights/" + originIata.toUpperCase()+"-"+destinationIata.toUpperCase()+"/" + outputFormatter.format(outboundDate) +"/" +outputFormatter.format(inboundDate) +"/");
      			
      			fares.add(fare);     			

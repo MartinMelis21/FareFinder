@@ -87,6 +87,8 @@ public class DatabaseHandler {
 	if ((fare = cachingModule.getCachedFares().get(new String (originID.toString() + destinationID.toString())))!=null)
 	{
 		fare.setLastAccountedPrice (price); 
+		fare.setOutboundLeg(outbound);
+		fare.setInboundLeg(inbound);
 		return fare;
 	}
 	

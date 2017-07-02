@@ -7,12 +7,13 @@ public class AirportStructure {
 	private String cityName = 		null;
 	private String country = 		null;
 	private String iataFaa = 		null;
-	private String icao = 		null;
+	private String icao = 			null;
 	private Double latitude = 		null;
 	private Double longtitude = 	null;
 	private Double altitude = 		null;
 	private Integer skyScannerID =	null;
-	private Integer zone =	null;
+	private Integer zone =			null;
+	private String zoneString = 	null;
 	
 	
 	
@@ -103,9 +104,17 @@ public class AirportStructure {
 	public void setZone(Integer zone) {
 		this.zone = zone;
 	}
+	
+	public String getZoneString() {
+		return this.zoneString;
+	}
+
+	public void setZoneString(String zoneString) {
+		this.zoneString = zoneString;
+	}
 
 	public AirportStructure(String airportName, String cityName, String country, Double latitude, Double longtitude,
-			Integer skyScannerID, String iataFaa, Double altitude, String icao, Integer zone, Integer airportID) {
+			Integer skyScannerID, String iataFaa, Double altitude, String icao, Integer zone, Integer airportID, String zoneString) {
 		super();
 		this.airportName = airportName;
 		this.cityName = cityName;
@@ -118,6 +127,7 @@ public class AirportStructure {
 		this.altitude = altitude;
 		this.zone = zone;
 		this.airportID = airportID;
+		this.zoneString = zoneString;
 	}
 
 }

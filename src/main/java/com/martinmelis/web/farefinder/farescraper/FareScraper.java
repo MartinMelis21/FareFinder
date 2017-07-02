@@ -48,6 +48,7 @@ import com.martinmelis.web.farefinder.modules.MailSender;
 import com.martinmelis.web.farefinder.publisher.Publisher;
 
 import dataTypes.AirportStructure;
+import dataTypes.DealPost;
 import dataTypes.InterregionalFare;
 import dataTypes.RoundTripFare;
 
@@ -116,7 +117,6 @@ public class FareScraper {
 		String city = null;
 		String ICAO = null;
 		
-		Integer zone = null;
 
 		while ((inputLine = in.readLine()) != null) {
 				String patternName = "<tr valign=top><td>Name:</td><td colspan=2 class=\"fn org\">(.*?)</td></tr>";
@@ -173,7 +173,7 @@ public class FareScraper {
 		name=city;
 	
 	if (name != null && latitude != null && longtitude != null)
-		return new AirportStructure(name, city, country, latitude, longtitude, null, iataCode, altitude, ICAO, zone,null);
+		return new AirportStructure(name, city, country, latitude, longtitude, null, iataCode, altitude, ICAO, null,null,null);
 	else
 		return null;
 	}
@@ -266,7 +266,7 @@ public class FareScraper {
 
 	public String getFaresString (ArrayList <String> countryList, DatabaseHandler databaseHandler) throws Exception
 	{
-		ArrayList<RoundTripFare> results = getFares(countryList, databaseHandler);
+		/*ArrayList<RoundTripFare> results = getFares(countryList, databaseHandler);
 		
 		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd.MM.yyyy");
 		Calendar cal = Calendar.getInstance();		
@@ -291,6 +291,26 @@ public class FareScraper {
  			finalResponse.append(faresDescription);
 		}
 		
+		*/
+		
+		
+		HashMap <String, DealPost> dealPosts = getFares(countryList, databaseHandler);
+		
+		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd.MM.yyyy");
+		Calendar cal = Calendar.getInstance();		
+		String faresDescription = "Last Fares update \t\t" + dateFormat.format(cal.getTime()) +"\n";
+		
+		RoundTripFare fare = null;
+		
+		for (DealPost post : dealPosts.values()){
+			
+			faresDescription += post.getDestinationCountry() + "\t from only " + post.getLowestPrice() + "\n";
+			faresDescription += "\tfrom " + post.getOriginZonesString() + "\n";
+			faresDescription +=post.getPostTextContent();
+ 			finalResponse.append(faresDescription);
+		}
+		
+		
 	return 	faresDescription;
 	}
 	//-----Fetching the Fares Data and Quote Metadata-----
@@ -311,8 +331,10 @@ public class FareScraper {
 		return sortedFares;
 		}
 	
-	public ArrayList<RoundTripFare> getFares(ArrayList <String> countryList, DatabaseHandler databaseHandler) throws Exception {
+	public HashMap<String, DealPost> getFares(ArrayList <String> countryList, DatabaseHandler databaseHandler) throws Exception {
 		
+		//TODO replace to CachingModule
+		HashMap <String, DealPost> dealPosts = new HashMap <String, DealPost> ();
 		
 		//-----------------TODO new architecture-------------------
 		fareFetcherList = new ArrayList <FareFetcher> ();
@@ -376,7 +398,6 @@ public class FareScraper {
 						System.out.println("Live price was not fetched");
 						continue;
 					}
-					resultFares.add(fare);
 					System.out.println("Successfully fetched live price");
 					
 				//If it is interesting we check if it is published
@@ -395,6 +416,20 @@ public class FareScraper {
 								
 								if (fare.isInteresting())
 								{
+									resultFares.add(fare);
+									
+									//TODO will be redone to cachingmodule
+									DealPost dealPost = null;
+									if ((dealPost = dealPosts.get(fare.getDestination().getCountry())) != null){
+										dealPost.addFare(fare);
+									}
+									else
+									{
+										dealPost = new DealPost (fare.getDestination().getCountry());
+										dealPost.addFare(fare);
+										dealPosts.put(fare.getDestination().getCountry(), dealPost);
+									}
+									
 									//If live price is still interesting i set fare to updated with new live price
 									System.out.println("Fare will be updated on portal");
 									fare.notifyAboutFare(mailSender);
@@ -415,6 +450,21 @@ public class FareScraper {
 						if (fare.isInteresting())
 						{
 							System.out.println("Fare is interesting and was not published before");
+							resultFares.add(fare);
+							
+							//TODO will be redone to cachingmodule
+							DealPost dealPost = null;
+							if ((dealPost = dealPosts.get(fare.getDestination().getCountry())) != null){
+								dealPost.addFare(fare);
+							}
+							else
+							{
+								dealPost = new DealPost (fare.getDestination().getCountry());
+								dealPost.addFare(fare);
+								dealPosts.put(fare.getDestination().getCountry(), dealPost);
+							}
+							
+							
 							//If live price is interesting i set fare to New with new live price
 							fare.notifyAboutFare(mailSender);
 							fare.publishFare (portalPublisher, databaseHandler);
@@ -589,7 +639,9 @@ public class FareScraper {
 		
 		//we need to check all published fares, that were not accounted in resultFares
 		//TODO analyzeResidualFares(resultFares);
-		return sortFares(resultFares);
+		//return sortFares(resultFares);
+		
+		return dealPosts;
 	}			
 		/*
 	public void analyzeResidualFares (ArrayList<RoundTripFare> filteredFares, DatabaseHandler databaseHandler) throws Exception 

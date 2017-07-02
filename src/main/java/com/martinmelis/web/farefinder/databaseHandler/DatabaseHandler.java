@@ -127,6 +127,7 @@ public class DatabaseHandler {
 		Integer portalPostID=				-1;
 		String portalPostStatus = 			null;
 		Integer lastAccountedPrice=			null;
+		String originZoneString=			null;
 		
 		// In case we know such a fare and thus know all airports
 		if (resultSet.next()) {  		     	
@@ -159,6 +160,7 @@ public class DatabaseHandler {
 			lastFareNotification =			resultSet.getDate(24);
 			portalPostID=					resultSet.getInt(25); ;
 			portalPostStatus = 				resultSet.getString(26);
+			originZoneString = 				resultSet.getString(27);
 			
 			resultSet.close();
 			
@@ -167,7 +169,7 @@ public class DatabaseHandler {
 				origin = cachingModule.getLocationDictionary().get(originID);
 			else
 			{
-				origin = new AirportStructure(originAirportName,originCityName,originCountry,originLatitude,originLongtitude,originSSID,originIataFaa, originAltitude, originIcao,originZone,originID);
+				origin = new AirportStructure(originAirportName,originCityName,originCountry,originLatitude,originLongtitude,originSSID,originIataFaa, originAltitude, originIcao,originZone,originID,originZoneString);
 	 			cachingModule.getLocationDictionary().put(originID, origin);
 			}
 			
@@ -175,7 +177,7 @@ public class DatabaseHandler {
 				destination = cachingModule.getLocationDictionary().get(destinationID);
 			else
 			{
-				destination = new AirportStructure(destinationAirportName,destinationCityName,destinationCountry,destinationLatitude,destinationLongtitude,destinationSSID,destinationIataFaa, destinationAltitude, destinationIcao,destinationZone,destinationID);
+				destination = new AirportStructure(destinationAirportName,destinationCityName,destinationCountry,destinationLatitude,destinationLongtitude,destinationSSID,destinationIataFaa, destinationAltitude, destinationIcao,destinationZone,destinationID,originZoneString);
 	 			cachingModule.getLocationDictionary().put(destinationID, destination);
 			}
 			
@@ -347,6 +349,7 @@ public class DatabaseHandler {
 			Integer zone = 			null;
 			Integer SSID = 			null;
 			Integer id =			null;
+			String zoneString=		null;
 			
 			if (resultSet.next()) {  		     	
 				airportName = 	resultSet.getString(1);
@@ -360,13 +363,14 @@ public class DatabaseHandler {
 				zone =			resultSet.getInt(9); 
 				id =			resultSet.getInt(10);
 				SSID = 			resultSet.getInt(11);  
+				zoneString =	resultSet.getString(12);
 				
 				resultSet.close();
 			}
 			
 			//TODO maybe airport infor WS needs to be called here ?
 			
-			AirportStructure airportStructure = new AirportStructure(airportName,cityName,country,latitude,longtitude,SSID,iataFaa, altitude, icao,zone,id);
+			AirportStructure airportStructure = new AirportStructure(airportName,cityName,country,latitude,longtitude,SSID,iataFaa, altitude, icao,zone,id,zoneString);
 			cachingModule.getLocationDictionary().put(airportID, airportStructure);
 			
 			return airportStructure;
@@ -460,7 +464,6 @@ public class DatabaseHandler {
 		String city = null;
 		String ICAO = null;
 		
-		Integer zone = null;
 
 		while ((inputLine = in.readLine()) != null) {
 				String patternName = "<tr valign=top><td>Name:</td><td colspan=2 class=\"fn org\">(.*?)</td></tr>";
@@ -517,7 +520,7 @@ public class DatabaseHandler {
 		name=city;
 	
 	if (name != null && latitude != null && longtitude != null)
-		return new AirportStructure(name, city, country, latitude, longtitude, null, iataCode, altitude, ICAO, zone,null);
+		return new AirportStructure(name, city, country, latitude, longtitude, null, iataCode, altitude, ICAO, null,null,null);
 	else
 	{
 		System.out.println("Error by fetching information about airport " + iataCode);

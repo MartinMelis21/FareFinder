@@ -50,7 +50,6 @@ public class RoundTripFare {
 		this.portalPostID = portalPostID;
 		this.portalPostStatus = portalPostStatus;
 		
-		
 	}
 		
 	private double getDistance () {
@@ -147,6 +146,7 @@ public class RoundTripFare {
 	public AirportStructure getOrigin() {
 		return origin;
 	}
+		
 	public void setOrigin(AirportStructure origin) {
 		this.origin = origin;
 	}

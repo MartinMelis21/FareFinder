@@ -80,7 +80,7 @@ public class SchedulerJob implements Job {
 			fareScraper = new FareScraper();
 			fares = fareScraper.getFaresString(origins,databaseHandler);
 	        	        
-	        File faresFile = new File("fares.txt");
+	        File faresFile = new File("fares.html");
 	        FileWriter faresWriter = new FileWriter(faresFile, false); // true to append	                             
 	        faresWriter.write(fares);
 	        faresWriter.close();

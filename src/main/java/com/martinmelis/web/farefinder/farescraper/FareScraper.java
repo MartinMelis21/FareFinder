@@ -298,14 +298,14 @@ public class FareScraper {
 		
 		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd.MM.yyyy");
 		Calendar cal = Calendar.getInstance();		
-		String faresDescription = "Last Fares update \t\t" + dateFormat.format(cal.getTime()) +"\n";
+		String faresDescription = "Last Fares update          " + dateFormat.format(cal.getTime()) +"<br>";
 		
 		RoundTripFare fare = null;
 		
 		for (DealPost post : dealPosts.values()){
 			
-			faresDescription += post.getDestinationCountry() + "\t from only " + post.getLowestPrice() + "\n";
-			faresDescription += "\tfrom " + post.getOriginZonesString() + "\n";
+			faresDescription += post.getDestinationCountry() + "      from only " + post.getLowestPrice() + "<br>";
+			faresDescription += "     " + post.getOriginZonesString() + "<br>";
 			faresDescription +=post.getPostTextContent();
  			finalResponse.append(faresDescription);
 		}

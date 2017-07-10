@@ -116,7 +116,7 @@ public class DealPost {
 				for (String destinationCity :sortedFares.keySet()){
 					
 					ArrayList<RoundTripFare> aggregatedFares = sortedFares.get(destinationCity);
-					contentText = contentText.concat("Destination:\t<b>"+destinationCity+"\n</b>");
+					contentText = contentText.concat("Destination:     <b>"+destinationCity+"</b><br>");
 					for (RoundTripFare fare :aggregatedFares)
 					{
 						String origin = fare.getOrigin().getCityName();
@@ -125,7 +125,7 @@ public class DealPost {
 						String inboundDateString = fare.getInboundLeg().toString();
 						Integer price = fare.getPrice();
 						String bookingURL = fare.getBookingURL();
-						contentText = contentText.concat("<a href =\""+ bookingURL +"\">\tfrom"+origin+"\t on\t"+outboundDateString+"-"+inboundDateString+"\tPrice:"+price+"\n</a>");
+						contentText = contentText.concat("from     <a href =\""+ bookingURL +"\">"+origin+"     on    "+outboundDateString+"-"+inboundDateString+"     Price: "+price+"</a><br>");
 					}
 				}
 				return contentText;

@@ -61,12 +61,12 @@ public class FareFinder extends HttpServlet{
 	  protected void doGet(HttpServletRequest request,
 	     HttpServletResponse response) throws ServletException, IOException {
 	    // Set a cookie for the user, so that the counter does not increate
-	    response.setContentType("text/plain");
+	    response.setContentType("text/html");
 	    PrintWriter out = response.getWriter();
 	    String fares = "";
 	      
 	    
-	    try(BufferedReader br = new BufferedReader(new FileReader("fares.txt"))) {
+	    try(BufferedReader br = new BufferedReader(new FileReader("fares.html"))) {
 	        StringBuilder sb = new StringBuilder();
 	        String line = br.readLine();
 

@@ -400,6 +400,21 @@ public class FareScraper {
 					}
 					System.out.println("Successfully fetched live price");
 					
+					if (fare.isInteresting())
+					{
+						//TODO will be redone to cachingmodule
+						DealPost dealPost = null;
+						if ((dealPost = dealPosts.get(fare.getDestination().getCountry())) != null){
+							dealPost.addFare(fare);
+						}
+						else
+						{
+							dealPost = new DealPost (fare.getDestination().getCountry());
+							dealPost.addFare(fare);
+							dealPosts.put(fare.getDestination().getCountry(), dealPost);
+						}
+					}
+					
 				//If it is interesting we check if it is published
 					if (fare.getPortalPostID()!= -1){
 						System.out.println("Fare is already published");
@@ -418,17 +433,6 @@ public class FareScraper {
 								{
 									resultFares.add(fare);
 									
-									//TODO will be redone to cachingmodule
-									DealPost dealPost = null;
-									if ((dealPost = dealPosts.get(fare.getDestination().getCountry())) != null){
-										dealPost.addFare(fare);
-									}
-									else
-									{
-										dealPost = new DealPost (fare.getDestination().getCountry());
-										dealPost.addFare(fare);
-										dealPosts.put(fare.getDestination().getCountry(), dealPost);
-									}
 									
 									//If live price is still interesting i set fare to updated with new live price
 									System.out.println("Fare will be updated on portal");
@@ -451,20 +455,7 @@ public class FareScraper {
 						{
 							System.out.println("Fare is interesting and was not published before");
 							resultFares.add(fare);
-							
-							//TODO will be redone to cachingmodule
-							DealPost dealPost = null;
-							if ((dealPost = dealPosts.get(fare.getDestination().getCountry())) != null){
-								dealPost.addFare(fare);
-							}
-							else
-							{
-								dealPost = new DealPost (fare.getDestination().getCountry());
-								dealPost.addFare(fare);
-								dealPosts.put(fare.getDestination().getCountry(), dealPost);
-							}
-							
-							
+														
 							//If live price is interesting i set fare to New with new live price
 							fare.notifyAboutFare(mailSender);
 							fare.publishFare (portalPublisher, databaseHandler);
@@ -476,6 +467,8 @@ public class FareScraper {
 			
 
  		}
+		
+		System.out.println ("Database fares being updated");
 		databaseHandler.updateDatabaseFares(filteredFares);	
 		
 		
@@ -634,7 +627,9 @@ public class FareScraper {
 //	     			}	
 //	     			
 //	     		}
+		System.out.println ("updateing regional fares");
 		accountRegionalFares(filteredFares,interregionalFares,databaseHandler);
+		System.out.println ("regional fares updated");
 	         }		
 		
 		//we need to check all published fares, that were not accounted in resultFares

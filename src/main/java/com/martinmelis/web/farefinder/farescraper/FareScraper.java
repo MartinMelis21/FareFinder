@@ -379,7 +379,7 @@ public class FareScraper {
 
 			//I check if fare is interesting
 				if (!fare.isInteresting()){
-					System.out.println("Fare is not interesting");
+					//System.out.println("Fare is not interesting");
 				//If it is not interesting anymore we check if it is published
 					if (fare.getPortalPostID() != null &&  fare.getPortalPostID() != -1){
 						System.out.println("Expire published fare");
@@ -390,15 +390,15 @@ public class FareScraper {
 				}
 				else
 				{
-					System.out.println("Found an interesting fare, getting its live price");
+					//System.out.println("Found an interesting fare, getting its live price");
 					//we check for live price and if we were unable to get one, we skip
 					//TODO maybe if it is published we should expire
 					if (fare.fetchLivePrice(fareFetcherList,fare)==null)
 					{
-						System.out.println("Live price was not fetched");
+						//System.out.println("Live price was not fetched");
 						continue;
 					}
-					System.out.println("Successfully fetched live price");
+					//System.out.println("Successfully fetched live price");
 					
 					if (fare.isInteresting())
 					{
@@ -417,7 +417,7 @@ public class FareScraper {
 					
 				//If it is interesting we check if it is published
 					if (fare.getPortalPostID()!= -1){
-						System.out.println("Fare is already published");
+						//System.out.println("Fare is already published");
 						
 						//If it is interesting and published we check if the price change is significant
 						Double priceChange = (fare.getLastAccountedPrice()-fare.getPrice())/Double.parseDouble(fare.getLastAccountedPrice().toString());
@@ -426,7 +426,7 @@ public class FareScraper {
 						
 						if (priceChange >= 1.2)
 						{
-							System.out.println("Fare price changed significantly and needs to be updated");
+							//System.out.println("Fare price changed significantly and needs to be updated");
 								//If price changed more than 20percent we get the live price
 								
 								if (fare.isInteresting())
@@ -435,13 +435,13 @@ public class FareScraper {
 									
 									
 									//If live price is still interesting i set fare to updated with new live price
-									System.out.println("Fare will be updated on portal");
+									//System.out.println("Fare will be updated on portal");
 									fare.notifyAboutFare(mailSender);
 									fare.updateFarePublication(portalPublisher, databaseHandler);
 								}
 								else{
 									//If live price is not interesting anymore I set fare to Expired and isPublished to false
-									System.out.println("Price change made fare not interesting and will be expired");
+									//System.out.println("Price change made fare not interesting and will be expired");
 									fare.expireFarePublication(portalPublisher, databaseHandler);
 								}
 						}
@@ -453,7 +453,7 @@ public class FareScraper {
 						
 						if (fare.isInteresting())
 						{
-							System.out.println("Fare is interesting and was not published before");
+							//System.out.println("Fare is interesting and was not published before");
 							resultFares.add(fare);
 														
 							//If live price is interesting i set fare to New with new live price

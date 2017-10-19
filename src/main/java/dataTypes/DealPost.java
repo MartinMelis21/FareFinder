@@ -63,7 +63,7 @@ public class DealPost {
 		}
 		
 		
-		return "From" + originZones +"";
+		return "from " + originZones +"";
 	}
 	
 	public Integer getLowestPrice (){

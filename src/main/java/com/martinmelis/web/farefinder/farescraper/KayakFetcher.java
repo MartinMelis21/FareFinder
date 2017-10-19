@@ -63,7 +63,7 @@ public class KayakFetcher extends FareFetcher {
 		{
 			String response=null;
 			try {
-				response = getRequest("https://www.kayak.com/h/explore/api?airport=" + originIata + "&budget=300");
+				response = getRequest("https://www.kayak.de/h/explore/api?airport=" + originIata + "&budget=300");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -106,7 +106,7 @@ public class KayakFetcher extends FareFetcher {
      			
      			RoundTripFare fare = databaseHandler.getRoundTripFare (originID, destinationID, price,outboundDate,inboundDate);
      			
-     			fare.setBookingURL("https://www.kayak.com/flights/" + originIata.toUpperCase()+"-"+destinationIata.toUpperCase()+"/" + outputFormatter.format(outboundDate) +"/" +outputFormatter.format(inboundDate) +"/");
+     			fare.setBookingURL("https://www.kayak.de/flights/" + originIata.toUpperCase()+"-"+destinationIata.toUpperCase()+"/" + outputFormatter.format(outboundDate) +"/" +outputFormatter.format(inboundDate) +"/");
      			
      			fares.add(fare);     			
      			

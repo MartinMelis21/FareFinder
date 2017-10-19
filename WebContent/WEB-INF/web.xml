@@ -17,7 +17,8 @@
   	
   	<servlet>
     <servlet-name>StartupScheduler</servlet-name>
-    <servlet-class>com.martinmelis.web.farefinder.servlet.StartupScheduler</servlet-class> 
+    <servlet-class>com.martinmelis.web.farefinder.servlet.StartupScheduler</servlet-class>
+    <load-on-startup>1</load-on-startup> 
   	</servlet>  
   	
   	<servlet>
@@ -37,7 +38,7 @@
   
    <servlet-mapping>
     <servlet-name>StartupScheduler</servlet-name>
-    <url-pattern>/ss</url-pattern>
+    <url-pattern>/StartupScheduler</url-pattern>
   </servlet-mapping> 
   
   <resource-ref>

@@ -131,6 +131,10 @@
 		
 				
 	</dependencies>
+	
+	<build>
+	<finalName>ROOT</finalName>
+	</build>
 	<profiles>
 		<profile>
 			<!-- When built in OpenShift the 'openshift' profile will be used when 

@@ -22,6 +22,7 @@ import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -297,14 +298,15 @@ public class FareScraper {
 		HashMap <String, DealPost> dealPosts = getFares(countryList, databaseHandler);
 		
 		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd.MM.yyyy");
+		dateFormat.setTimeZone(TimeZone.getTimeZone("CET"));
 		Calendar cal = Calendar.getInstance();		
-		String faresDescription = "Last Fares update          " + dateFormat.format(cal.getTime()) +"<br>";
+		String faresDescription = "Last Fares update          " + dateFormat.format(cal.getTime()) +"<br><br>";
 		
 		RoundTripFare fare = null;
 		
 		for (DealPost post : dealPosts.values()){
 			
-			faresDescription += post.getDestinationCountry() + "      from only " + post.getLowestPrice() + "<br>";
+			faresDescription += "<br>" + post.getDestinationCountry() + "      from only " + post.getLowestPrice() + "<br>";
 			faresDescription += "     " + post.getOriginZonesString() + "<br>";
 			faresDescription +=post.getPostTextContent();
  			finalResponse.append(faresDescription);

@@ -131,10 +131,6 @@
 		
 				
 	</dependencies>
-	
-	<build>
-	<finalName>ROOT</finalName>
-	</build>
 	<profiles>
 		<profile>
 			<!-- When built in OpenShift the 'openshift' profile will be used when 
@@ -146,7 +142,7 @@
 			<!-- http://maven.apache.org/guides/mini/guide-building-for-different-environments.html -->
 			<id>openshift</id>
 			<build>
-				<finalName>farefinder</finalName>
+				<finalName>ROOT</finalName>
 				<plugins>
 					<plugin>
 						<artifactId>maven-war-plugin</artifactId>

@@ -68,7 +68,6 @@ public class FareScraper {
 	private ArrayList <FareFetcher> fareFetcherList;
 	
 	StringBuffer finalResponse;
-
 	
 	private Connection conn = null;
 	private MailSender mailSender = null;

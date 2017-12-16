@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <!--
-  Licensed to the Apache Software Foundation (ASF) under one or more
+  Licensed to the Apache Software Foundation (ASF ) under one or more
   contributor license agreements.  See the NOTICE file distributed with
   this work for additional information regarding copyright ownership.
   The ASF licenses this file to You under the Apache License, Version 2.0
@@ -31,11 +31,11 @@
     <Valve className="org.apache.catalina.valves.CometConnectionManagerValve" />
     -->
 
-    <Resource name="jdbc/MySQLDS"
-              url="jdbc:mysql://${OPENSHIFT_MYSQL_DB_HOST}:${OPENSHIFT_MYSQL_DB_PORT}/${OPENSHIFT_APP_NAME}"
+        <Resource name="jdbc/MySQLDS"
+              url="jdbc:mysql://127.0.0.1:46036/farefinder"
               driverClassName="com.mysql.jdbc.Driver"
-              username="${OPENSHIFT_MYSQL_DB_USERNAME}"
-              password="${OPENSHIFT_MYSQL_DB_PASSWORD}"
+              username="adminhbdsaei"
+              password="hhcXbX8hrHLP"
               auth="Container"
               type="javax.sql.DataSource"
               maxActive="20"

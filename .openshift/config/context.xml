@@ -31,11 +31,11 @@
     <Valve className="org.apache.catalina.valves.CometConnectionManagerValve" />
     -->
 
-    <Resource name="jdbc/MySQLDS"
-              url="jdbc:mysql://${OPENSHIFT_MYSQL_DB_HOST}:${OPENSHIFT_MYSQL_DB_PORT}/${OPENSHIFT_APP_NAME}"
+        <Resource name="jdbc/MySQLDS"
+              url="jdbc:mysql://127.0.0.1:46036/farefinder"
               driverClassName="com.mysql.jdbc.Driver"
-              username="${OPENSHIFT_MYSQL_DB_USERNAME}"
-              password="${OPENSHIFT_MYSQL_DB_PASSWORD}"
+              username="adminhbdsaei"
+              password="hhcXbX8hrHLP"
               auth="Container"
               type="javax.sql.DataSource"
               maxActive="20"

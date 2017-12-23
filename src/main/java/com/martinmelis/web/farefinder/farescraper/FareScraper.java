@@ -284,6 +284,7 @@ public class FareScraper {
  			faresDescription += (("Inbound Leg\n\tFrom : " + fare.getDestination().getCityName()  + " to " + fare.getOrigin().getCityName() ) + "\n");
  			faresDescription += ("\tDate : " + fare.getInboundLeg().toString() + "\n");
  			faresDescription += (("Price : " + fare.getPrice()) + "\n");
+ 			
  			faresDescription += ("Average price on this route : " + fare.getBaseFare() + "\n");
  			faresDescription += (("Sale : " + fare.getSaleRatio()) + "\n");
  			faresDescription += (("DealRatio : " + fare.getDealRatio()) + "\n"+ "\n");

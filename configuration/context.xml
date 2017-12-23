@@ -31,7 +31,7 @@
     -->
 
     <Resource name="jdbc/MySQLDS"
-              url="jdbc:mysql://127.0.0.1:3306/farefinder"
+              url="jdbc:mysql://mysql:3306/farefinder"
               driverClassName="com.mysql.jdbc.Driver"
               username="adminhbdsaei"
               password="hhcXbX8hrHLP"

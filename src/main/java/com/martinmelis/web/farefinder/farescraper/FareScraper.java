@@ -348,6 +348,7 @@ public class FareScraper {
 		fareFetcherList.add(kiwiFetcher);
 		fareFetcherList.add(kayakFetcher);
 		
+		
 		//--------------------------------------------------------
 		
 		ArrayList<RoundTripFare> resultFares = new ArrayList<RoundTripFare> ();

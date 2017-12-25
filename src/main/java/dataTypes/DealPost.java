@@ -25,6 +25,22 @@ public class DealPost {
 		return this.destinationCountry;
 	}
 	
+public String getRouteString (){
+		
+	int counter = 0;
+	String routeString = "";
+	for (RoundTripFare fare :this.aggregatedFares)
+	{
+		counter++;
+		routeString += fare.getOrigin().getIataFaa() + "-" + fare.getDestination().getIataFaa();
+	
+		if (this.aggregatedFares.size() > counter)
+		{
+			routeString += ",";
+		}
+	}
+		return routeString;
+	}
 	
 	public String getOriginZonesString (){
 		String originZones = "";

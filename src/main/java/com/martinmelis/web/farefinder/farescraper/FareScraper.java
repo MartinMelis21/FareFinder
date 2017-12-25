@@ -304,6 +304,23 @@ public class FareScraper {
 		
 		RoundTripFare fare = null;
 		
+		
+		//insert map <img src="pulpitrock.jpg" alt="Mountain View">
+		faresDescription += "<br><br><img src=\"http://www.gcmap.com/map?P=";
+		int counter = 0;
+		for (DealPost post : dealPosts.values()){
+			counter ++;
+			faresDescription += post.getRouteString();
+			
+			if (dealPosts.values().size() > counter)
+			{
+				faresDescription += ",";
+			}
+			
+		}
+		
+		faresDescription += "&MS=bm&MP=rect&MR=900&MX=1024x640&PM=*&PC=%23ffff00\" alt=\"Route map\"><br><br>";
+		
 		for (DealPost post : dealPosts.values()){
 			
 			faresDescription += "<br>" + post.getDestinationCountry() + "      from only " + post.getLowestPrice() + "<br>";

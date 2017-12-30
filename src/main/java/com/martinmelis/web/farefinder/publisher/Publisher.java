@@ -27,11 +27,11 @@ public class Publisher {
 	private void initializeConnection()
 	{
 		config = new XmlRpcClientConfigImpl();
-	    config.setBasicPassword("P(qo#zKmm6hfXAq*X8");
+	    config.setBasicPassword("Patrolman486@1");
 	    config.setBasicUserName("martinmelis");
 	    config.setEnabledForExtensions(true);
 		      try {
-				config.setServerURL(new URL("http://errorflights-martinmelis.rhcloud.com/xmlrpc.php"));
+				config.setServerURL(new URL("http://www.errorflights.com/xmlrpc.php"));
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -46,7 +46,7 @@ public class Publisher {
 	      params = new Vector();
 	      params.addElement(new Integer(0));
 	      params.addElement("martinmelis");
-	      params.addElement("P(qo#zKmm6hfXAq*X8");
+	      params.addElement("Patrolman486@1");
 	     
 	}
 	
@@ -385,7 +385,7 @@ public class Publisher {
 		Vector paramsGet = new Vector();
 		paramsGet.addElement(new Integer (0));
 		paramsGet.addElement("martinmelis");
-		paramsGet.addElement("P(qo#zKmm6hfXAq*X8");
+		paramsGet.addElement("Patrolman486@1");
 		paramsGet.addElement(postID);
 		
 		Object b = (Object)client.execute("wp.getPost", paramsGet);

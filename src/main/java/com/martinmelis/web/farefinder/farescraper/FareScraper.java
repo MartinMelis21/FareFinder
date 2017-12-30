@@ -46,7 +46,7 @@ import org.xml.sax.SAXException;
 
 import com.martinmelis.web.farefinder.databaseHandler.DatabaseHandler;
 import com.martinmelis.web.farefinder.modules.MailSender;
-//import com.martinmelis.web.farefinder.publisher.Publisher;
+import com.martinmelis.web.farefinder.publisher.Publisher;
 
 import dataTypes.AirportStructure;
 import dataTypes.DealPost;
@@ -71,7 +71,7 @@ public class FareScraper {
 	
 	private Connection conn = null;
 	private MailSender mailSender = null;
-	//private Publisher portalPublisher = null;
+	private Publisher portalPublisher = null;
 
 	//-----inicialization-----
 	
@@ -457,7 +457,7 @@ public class FareScraper {
 									//If live price is still interesting i set fare to updated with new live price
 									//System.out.println("Fare will be updated on portal");
 									fare.notifyAboutFare(mailSender);
-									//fare.updateFarePublication(portalPublisher, databaseHandler);
+									fare.updateFarePublication(portalPublisher, databaseHandler);
 								}
 								else{
 									//If live price is not interesting anymore I set fare to Expired and isPublished to false
@@ -478,7 +478,7 @@ public class FareScraper {
 														
 							//If live price is interesting i set fare to New with new live price
 							fare.notifyAboutFare(mailSender);
-							//fare.publishFare (portalPublisher, databaseHandler);
+							fare.publishFare (portalPublisher, databaseHandler);
 						}
 							//If live price is not interesting nor published, we skip
 					}

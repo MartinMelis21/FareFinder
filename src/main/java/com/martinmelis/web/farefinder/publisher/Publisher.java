@@ -27,7 +27,7 @@ public class Publisher {
 	private void initializeConnection()
 	{
 		config = new XmlRpcClientConfigImpl();
-	    config.setBasicPassword("Patrolman486@1");
+	    config.setBasicPassword("Patrolman486@");
 	    config.setBasicUserName("martinmelis");
 	    config.setEnabledForExtensions(true);
 		      try {
@@ -46,7 +46,7 @@ public class Publisher {
 	      params = new Vector();
 	      params.addElement(new Integer(0));
 	      params.addElement("martinmelis");
-	      params.addElement("Patrolman486@1");
+	      params.addElement("Patrolman486@");
 	     
 	}
 	
@@ -371,7 +371,7 @@ public class Publisher {
 		paramsDelete.addElement(new Integer(0));
 		paramsDelete.addElement(postID);
 		paramsDelete.addElement("martinmelis");
-		paramsDelete.addElement("P(qo#zKmm6hfXAq*X8");
+		paramsDelete.addElement("Patrolman486@");
 		client.execute("metaWeblog.deletePost", paramsDelete);
   	      
 	}
@@ -385,7 +385,7 @@ public class Publisher {
 		Vector paramsGet = new Vector();
 		paramsGet.addElement(new Integer (0));
 		paramsGet.addElement("martinmelis");
-		paramsGet.addElement("Patrolman486@1");
+		paramsGet.addElement("Patrolman486@");
 		paramsGet.addElement(postID);
 		
 		Object b = (Object)client.execute("wp.getPost", paramsGet);

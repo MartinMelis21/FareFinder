@@ -80,7 +80,7 @@ public class FareScraper {
 			DateTime dt = new DateTime(zone);
 			DateTimeFormatter fmt = DateTimeFormat.forPattern("HH:mm dd.MM.yyyy");
 			mailSender = new MailSender ();
-			//portalPublisher = new Publisher();
+			portalPublisher = new Publisher();
 			
 			
  		System.out.println("Last fares update:\t" + fmt.print(dt));	

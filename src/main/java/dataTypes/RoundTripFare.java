@@ -252,26 +252,44 @@ public class RoundTripFare {
 	}
 	
 	public void publishFare (Publisher portalPublisher, DatabaseHandler databaseHandler) throws Exception {
-		portalPublisher.publishFareToPortal(this);
+		try {
+			portalPublisher.publishFareToPortal(this);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		this.setPortalPostStatus("new");
 		databaseHandler.updateFarePublication (this);
 	}
 	
 	public void expireFarePublication (Publisher portalPublisher, DatabaseHandler databaseHandler) throws Exception {
-		portalPublisher.updateFareOnPortal(this,"expired");
+		try {
+			portalPublisher.updateFareOnPortal(this,"expired");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		this.setPortalPostStatus("expired");
 		this.setPortalPostID(-1);
 		databaseHandler.updateFarePublication (this);
 	}
 	
 	public void updateFarePublication (Publisher portalPublisher, DatabaseHandler databaseHandler) throws Exception {
-		portalPublisher.updateFareOnPortal(this,"updated");
+		try {
+			portalPublisher.updateFareOnPortal(this,"updated");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		this.setPortalPostStatus("updated");
 		databaseHandler.updateFarePublication (this);
 	}
 	
 	public void notifyAboutFare (MailSender mailSender) throws SQLException {
 		Date lastAccountedDate = this.getLastFareNotification();
+		Date today = new Date();
+		today.setHours(0); //same for minutes and seconds
+		
 		DateTime lastFareNotification = new DateTime (lastAccountedDate);
 		//If it is more than a day or is better than 20% of previously announced
 		DateTime lastWeek = DateTime.now().minusDays(7);
@@ -280,6 +298,7 @@ public class RoundTripFare {
 		if (lastAccountedDate == null || (lastFareNotification.getMillis() < lastWeek.getMillis()))
 		{	//TODO or 20% better
 			mailSender.sendMail("martin.melis21@gmail.com", this);//TODO send to all mail reciepts
+			this.setLastFareNotification(today);
 		}
 	}
 	

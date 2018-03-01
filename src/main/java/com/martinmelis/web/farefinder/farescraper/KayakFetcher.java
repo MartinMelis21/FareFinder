@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 
@@ -23,6 +24,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.xml.sax.SAXException;
+
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.Wait;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.martinmelis.web.farefinder.databaseHandler.DatabaseHandler;
 import com.martinmelis.web.farefinder.databaseHandler.DatabaseQueries;
@@ -136,13 +147,23 @@ public class KayakFetcher extends FareFetcher {
 	@Override
 	public Integer getLivePrice(RoundTripFare fare) throws Exception {
 		// TODO temporary hack
+		//visit https://www.kayak.de/flights/LHR-JFK/2018-05-04/2018-05-08?sort=price_a
+		//wait for full load
+		//parse Common-Booking-MultiBookProvider featured-provider cheapest multi-row Theme-featured-large
+		
+		//WebDriver driver = new FirefoxDriver();
+		//driver.get("https://www.kayak.de/flights/" + LHR-JFK +"/" + 2018-05-04 + "/" + 2018-05-08 + "?sort=price_a");
+		//List <WebElement> results= driver.findElements(By.className("Common-Booking-MultiBookProvider featured-provider cheapest multi-row Theme-featured-large"));
+       
+		
+		
 		return fare.getPrice();
 	}
 	
 	public String getRequest (String ssURL) throws IOException
 	{
 		URL kayakObj = new URL(ssURL);
-		HttpURLConnection kayakCon = (HttpURLConnection) kayakObj.openConnection();
+		HttpsURLConnection kayakCon = (HttpsURLConnection) kayakObj.openConnection();
 		kayakCon.setRequestMethod("GET");
 		kayakCon.setRequestProperty("User-Agent", "Mozilla/5.0");
 		kayakCon.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");

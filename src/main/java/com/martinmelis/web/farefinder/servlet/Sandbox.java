@@ -2,9 +2,13 @@ package com.martinmelis.web.farefinder.servlet;
 
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -13,6 +17,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.naming.Context;
@@ -26,6 +31,19 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
 
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.htmlunit.*;
+import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import com.gargoylesoftware.htmlunit.BrowserVersion;
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.martinmelis.web.farefinder.dao.*;
 import com.martinmelis.web.farefinder.farescraper.FareScraper;
 import com.martinmelis.web.farefinder.farescraper.KayakFetcher;
@@ -43,27 +61,106 @@ import redstone.xmlrpc.XmlRpcFault;
  * Servlet implementation class FareFinder
  */
 
-@WebServlet("/PostPublish")
+@WebServlet("/Sandbox")
 public class Sandbox extends HttpServlet{
 	  
 	
 	  private static final long serialVersionUID = 1L;
-	  int count;
-	  private FileDao dao;
-	  
-	  DataSource dataSource = null;
-	  static int lport;
-	  static String rhost;
-	  static int rport;
-	  Publisher pb= new Publisher();
-	  
+	 	  
 	  
 	  @Override
 	  protected void doGet(HttpServletRequest request,
 	     HttpServletResponse response) throws ServletException, IOException {
-		  
+		 
+		  HtmlUnitDriver driver = (org.openqa.selenium.htmlunit.HtmlUnitDriver) new HtmlUnitDriver(BrowserVersion.CHROME,true){
+		        @Override
+		        protected WebClient newWebClient(BrowserVersion version) {
+		            WebClient webClient = super.newWebClient(version);
+		            webClient.getOptions().setThrowExceptionOnScriptError(false);
+		            webClient.getOptions().setActiveXNative(true);
+		            webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+		            webClient.getOptions().setAppletEnabled(true);
+		            return webClient;
+		        }
+		    };		
+		 
+		    WebClient webClient = new WebClient(BrowserVersion.FIREFOX_45);
+		    webClient.getOptions().setThrowExceptionOnScriptError(false);
+		    HtmlPage page = webClient.getPage("https://www.kayak.de/flights/LHR-JFK/2018-05-04/2018-05-08?sort=price_a");
+            webClient.getOptions().setJavaScriptEnabled(true);
+            webClient.waitForBackgroundJavaScript(10000);
+		    
+		 //WebDriver driver = new FirefoxDriver();	
+		//((HtmlUnitDriver) driver).setJavascriptEnabled(true);
+		//driver.get("https://www.kayak.de/flights/LHR-JFK/2018-05-04/2018-05-08?sort=price_a");
+		//webClient.waitForBackgroundJavaScript(3000);
+		
+		
+		 // wait for jQuery to load
+	    ExpectedCondition<Boolean> jQueryLoad = new ExpectedCondition<Boolean>() {
+	      @Override
+	      public Boolean apply(WebDriver driver) {
+	        try {
+	          return ((Long)((JavascriptExecutor)driver).executeScript("return jQuery.active") == 0);
+	        }
+	        catch (Exception e) {
+	          // no jQuery present
+	          return true;
+	        }
+	      }
+	    };
+
+	    	    
+	    // wait for Javascript to load
+	    ExpectedCondition<Boolean> jsLoad = new ExpectedCondition<Boolean>() {
+	      @Override
+	      public Boolean apply(WebDriver driver) {
+	        return ((JavascriptExecutor)driver).executeScript("return document.readyState")
+	        .toString().equals("complete");
+	      }
+	    };
+	    
+	    
+		//WebDriverWait wait = new WebDriverWait(driver, 30);
+				
+				//wait.until(jQueryLoad);
+				//wait.until(jsLoad);
+		
+				//WebDriverWait wait = new WebDriverWait(driver,600);
+		
+	/*			wait.until(new ExpectedCondition<Boolean>() {
+				    public Boolean apply(WebDriver driver) {
+				        System.out.println ("Entering until");
+				    	WebElement button = driver.findElement(By.cssSelector("div[class='bar']"));
+				    	
+				    	//style="transform: translateX(100%);"
+				    			
+				        String text = button.getAttribute("style");
+				        System.out.println(text);
+				        if(text.equals("transform: translateX(100%);")) 
+				            return true;
+				        else
+				            return false;
+				    }
+				});*/
+				
+				//List<WebElement> deals =  driver.findElements(By.cssSelector("div[class='Common-Booking-MultiBookProvider featured-provider cheapest multi-row Theme-featured-large']"));
+			
+				//for (WebElement deal:deals)
+				//{
+				//	System.out.println(deal.getAttribute("innerHTML").toString());
+				//}
+				File fout = new File("C:\\Users\\Martin Melis\\Desktop\\errorflights\\test.txt");
+				FileOutputStream fos = new FileOutputStream(fout);
+			    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+			 
+				bw.write(page.asXml());
+			 
+				bw.close();
+				driver.close();
 	  }
 	  
+	 
 	  	
 	  	
 	  @Override

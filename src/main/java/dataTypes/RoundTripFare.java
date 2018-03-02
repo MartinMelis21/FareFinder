@@ -223,7 +223,7 @@ public class RoundTripFare {
 					}
 		
 		//---Kayak fare---
-				if (fare.getBookingURL().startsWith("https://www.kayak.com"))
+				if (fare.getBookingURL().startsWith("https://www.kayak.de"))
 					{
 						for (FareFetcher fareFetcher:fetcherList)
 						{

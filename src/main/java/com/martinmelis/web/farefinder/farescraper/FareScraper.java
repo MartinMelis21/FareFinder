@@ -358,11 +358,11 @@ public class FareScraper {
 		//-----------------TODO new architecture-------------------
 		fareFetcherList = new ArrayList <FareFetcher> ();
 		FareFetcher skyScannerFetcher = new SkyScannerFetcher (databaseHandler);
-		FareFetcher kiwiFetcher = new KiwiFetcher (databaseHandler);
+		//FareFetcher kiwiFetcher = new KiwiFetcher (databaseHandler);
 		FareFetcher kayakFetcher = new KayakFetcher (databaseHandler);
 		
 		fareFetcherList.add(skyScannerFetcher);
-		fareFetcherList.add(kiwiFetcher);
+		//fareFetcherList.add(kiwiFetcher);
 		fareFetcherList.add(kayakFetcher);
 		
 		
@@ -388,7 +388,8 @@ public class FareScraper {
 			//-----------------------------------------------------
 		
 		filteredFares = filterFares(fares);
-			
+		System.out.println ("Database fares being updated");
+		databaseHandler.updateDatabaseFares(filteredFares);	
 			//TODO I also need to set all fares, which are not in current Deals list to be set to isPublished = 0
 			
 		
@@ -488,8 +489,6 @@ public class FareScraper {
 
  		}
 		
-		System.out.println ("Database fares being updated");
-		databaseHandler.updateDatabaseFares(filteredFares);	
 		
 		
 		

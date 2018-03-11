@@ -37,12 +37,13 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.openqa.selenium.phantomjs.PhantomJSDriver;
 
 import com.martinmelis.web.farefinder.dao.*;
 import com.martinmelis.web.farefinder.farescraper.FareScraper;
@@ -78,10 +79,10 @@ public class Sandbox extends HttpServlet{
           if (!f.exists()) {
               f.mkdirs();
           }
-          File browserDriver = new File("Driver" + File.separator + "chromedriver");
-          if (!browserDriver.exists()) {
-        	  browserDriver.createNewFile();
-              org.apache.commons.io.FileUtils.copyURLToFile(resource, browserDriver);
+          File geckodriver = new File("Driver" + File.separator + "geckodriver");
+          if (!geckodriver.exists()) {
+        	  geckodriver.createNewFile();
+              org.apache.commons.io.FileUtils.copyURLToFile(resource, geckodriver);
           }
           
           /*
@@ -104,9 +105,18 @@ public class Sandbox extends HttpServlet{
           //sudo mv geckodriver /usr/local/bin/
           }*/
           
-          
-        System.setProperty("webdriver.gecko.driver",browserDriver.getAbsolutePath());
-  		WebDriver driver = new FirefoxDriver();
+         File pathToBinary = new File(geckodriver.getAbsolutePath());
+         FirefoxBinary ffBinary = new FirefoxBinary(pathToBinary);
+         FirefoxProfile firefoxProfile = new FirefoxProfile();
+         
+         FirefoxOptions option=new FirefoxOptions();
+         option.setProfile(firefoxProfile);
+         option.setBinary(ffBinary);
+         
+         //System.setProperty("webdriver.gecko.driver",browserDriver.getAbsolutePath());
+  			
+         WebDriver driver = new FirefoxDriver (option);
+        //FirefoxDriver(option);
   		//comment the above 2 lines and uncomment below 2 lines to use Chrome
   		//System.setProperty("webdriver.chrome.driver","G:\\chromedriver.exe");
   		//WebDriver driver = new ChromeDriver();

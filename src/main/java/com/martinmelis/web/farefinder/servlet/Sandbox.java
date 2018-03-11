@@ -116,7 +116,7 @@ public class Sandbox extends HttpServlet{
          
          //System.setProperty("webdriver.gecko.driver",browserDriver.getAbsolutePath());
          System.setProperty("webdriver.gecko.driver",geckodriver.getAbsolutePath());
-         WebDriver driver = new FirefoxDriver (option);
+         WebDriver driver = new FirefoxDriver ();
         //FirefoxDriver(option);
   		//comment the above 2 lines and uncomment below 2 lines to use Chrome
   		//System.setProperty("webdriver.chrome.driver","G:\\chromedriver.exe");

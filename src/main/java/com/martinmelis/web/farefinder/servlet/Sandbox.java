@@ -83,6 +83,7 @@ public class Sandbox extends HttpServlet{
           if (!geckodriver.exists()) {
         	  geckodriver.createNewFile();
               org.apache.commons.io.FileUtils.copyURLToFile(resource, geckodriver);
+              geckodriver.setExecutable(true);
           }
           
           /*

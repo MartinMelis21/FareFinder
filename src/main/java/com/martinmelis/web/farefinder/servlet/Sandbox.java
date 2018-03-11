@@ -8,8 +8,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -35,15 +37,13 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.htmlunit.*;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.phantomjs.PhantomJSDriver;
 
-import com.gargoylesoftware.htmlunit.BrowserVersion;
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.martinmelis.web.farefinder.dao.*;
 import com.martinmelis.web.farefinder.farescraper.FareScraper;
 import com.martinmelis.web.farefinder.farescraper.KayakFetcher;
@@ -72,6 +72,71 @@ public class Sandbox extends HttpServlet{
 	  protected void doGet(HttpServletRequest request,
 	     HttpServletResponse response) throws ServletException, IOException {
 		 
+		  ClassLoader classLoader = getClass().getClassLoader();
+          URL resource = classLoader.getResource("/FareFinder/src/main/resources/drivers/geckodriver");
+          File f = new File("Driver");
+          if (!f.exists()) {
+              f.mkdirs();
+          }
+          File browserDriver = new File("Driver" + File.separator + "chromedriver");
+          if (!browserDriver.exists()) {
+        	  browserDriver.createNewFile();
+              org.apache.commons.io.FileUtils.copyURLToFile(resource, browserDriver);
+          }
+          
+          /*
+          File pathToBinary = new File(browserDriver.getAbsolutePath());
+          FirefoxBinary ffBinary = new FirefoxBinary(pathToBinary);
+          FirefoxProfile firefoxProfile = new FirefoxProfile();
+          FirefoxDriver driver = new FirefoxDriver(ffBinary,firefoxProfile);
+          
+         System.setProperty("webdriver.firefox.marionette",browserDriver.getAbsolutePath());*/
+          
+          // register path for windows
+          String operatingSystem = System.getProperty("os.name");
+          System.out.println (operatingSystem);
+          
+          /*else
+          {
+          
+          //unix
+          //chmod +x geckodriver
+          //sudo mv geckodriver /usr/local/bin/
+          }*/
+          
+          
+        System.setProperty("webdriver.gecko.driver",browserDriver.getAbsolutePath());
+  		WebDriver driver = new FirefoxDriver();
+  		//comment the above 2 lines and uncomment below 2 lines to use Chrome
+  		//System.setProperty("webdriver.chrome.driver","G:\\chromedriver.exe");
+  		//WebDriver driver = new ChromeDriver();
+      	
+          String baseUrl = "http://demo.guru99.com/test/newtours/";
+          String expectedTitle = "Welcome: Mercury Tours";
+          String actualTitle = "";
+
+          // launch Fire fox and direct it to the Base URL
+          driver.get(baseUrl);
+
+          // get the actual value of the title
+          actualTitle = driver.getTitle();
+
+          /*
+           * compare the actual title of the page with the expected one and print
+           * the result as "Passed" or "Failed"
+           */
+          if (actualTitle.contentEquals(expectedTitle)){
+              System.out.println("Test Passed!");
+          } else {
+              System.out.println("Test Failed");
+          }
+         
+          //close Fire fox
+          driver.close();
+          
+          
+		  /*
+		  
 		  HtmlUnitDriver driver = (org.openqa.selenium.htmlunit.HtmlUnitDriver) new HtmlUnitDriver(BrowserVersion.CHROME,true){
 		        @Override
 		        protected WebClient newWebClient(BrowserVersion version) {
@@ -119,7 +184,7 @@ public class Sandbox extends HttpServlet{
 	        .toString().equals("complete");
 	      }
 	    };
-	    
+	    */
 	    
 		//WebDriverWait wait = new WebDriverWait(driver, 30);
 				
@@ -150,6 +215,8 @@ public class Sandbox extends HttpServlet{
 				//{
 				//	System.out.println(deal.getAttribute("innerHTML").toString());
 				//}
+	    
+	    /*
 				File fout = new File("C:\\Users\\Martin Melis\\Desktop\\errorflights\\test.txt");
 				FileOutputStream fos = new FileOutputStream(fout);
 			    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
@@ -158,6 +225,9 @@ public class Sandbox extends HttpServlet{
 			 
 				bw.close();
 				driver.close();
+				
+				
+				*/
 	  }
 	  
 	 

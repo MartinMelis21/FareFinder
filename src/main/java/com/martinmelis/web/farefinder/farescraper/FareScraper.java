@@ -358,11 +358,11 @@ public class FareScraper {
 		//-----------------TODO new architecture-------------------
 		fareFetcherList = new ArrayList <FareFetcher> ();
 		FareFetcher skyScannerFetcher = new SkyScannerFetcher (databaseHandler);
-		//FareFetcher kiwiFetcher = new KiwiFetcher (databaseHandler);
+		FareFetcher kiwiFetcher = new KiwiFetcher (databaseHandler);
 		FareFetcher kayakFetcher = new KayakFetcher (databaseHandler);
 		
 		fareFetcherList.add(skyScannerFetcher);
-		//fareFetcherList.add(kiwiFetcher);
+		fareFetcherList.add(kiwiFetcher);
 		fareFetcherList.add(kayakFetcher);
 		
 		
